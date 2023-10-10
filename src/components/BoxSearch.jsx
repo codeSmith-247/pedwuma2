@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { BigBtn } from "./Buttons"; 
 import NoResults from "./NoResults";
 
-import { LocationSuggestions, LocationDetails } from "../functions/Locations";
+import { LocationSuggestions, LocationDetails } from "../functions/utils/Locations";
 
 function LocationSearch({ callback = console.log }) {
 

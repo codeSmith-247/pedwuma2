@@ -8,7 +8,7 @@ export default function ({ title, children, link=''}) {
 
         <div className="p-10 my-10 max-[475px]:py-5 max-[475px]:px-0">
         <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-[475px]:px-5">
                 <h2 className="orb text-2xl max-[800px]:text-xl font-semibold">{title}</h2>
                 <span className="max-[800px]:hidden">
                     <hr className="bg-black h-[2px] w-[100px]"/>
