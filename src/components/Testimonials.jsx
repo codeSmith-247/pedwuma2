@@ -2,7 +2,7 @@ import SideScroll from './SideScroll';
 
 export default function () {
     return (
-        <div className="px-10 max-[475px]:px-5">
+        <div className="px-10 max-[475px]:px-0">
             <div data-aos="fade-in" className="title mx-auto w-max flex items-center mb-3">
                 <hr className="w-[100px] max-[800px]:w-[10px] h-0.5 bg-black"/>
                 <div className="uppercase text-lg text-blue-600 font-semibold orb">Testimonials</div>

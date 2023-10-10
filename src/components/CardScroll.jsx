@@ -6,7 +6,7 @@ import SideScroll from "./SideScroll";
 export default function ({ title, children, link=''}) {
     return (
 
-        <div className="p-10 my-10 max-[475px]:p-5">
+        <div className="p-10 my-10 max-[475px]:py-5 max-[475px]:px-0">
         <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
                 <h2 className="orb text-2xl max-[800px]:text-xl font-semibold">{title}</h2>
