@@ -20,11 +20,11 @@ export default function() {
 
             <div className="" style={{background: 'url(/images/pedwuma.jpg)', backgroundSize: 'cover'}}>
                 <div className="grid grid-cols-10 max-[1165px]:grid-cols-5 gap-10 p-10 max-[1165px]:p-5 my-10 backdrop-blur-xl bg-black bg-opacity-50">
-                    <div data-aos="fade-up" className="col-span-5 max-[1165px]:hidden">
+                    <div data-aos="fade-in" className="col-span-5 max-[1165px]:hidden">
                         <img src="/images/pedwuma.jpg" alt="" className="object-cover w-full h-full rounded-md" />
                     </div>
 
-                    <div data-aos="fade-down" className="col-span-5 mt-5 bg-white rounded-md p-5">
+                    <div data-aos="fade-in" className="col-span-5 mt-5 bg-white rounded-md p-5">
                         <h1 className="font-semibold text-5xl max-[475px]:text-3xl orb">
                             Are You An <span className="text-blue-600 orb">Experienced Worker</span>
                         </h1>

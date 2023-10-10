@@ -6,7 +6,7 @@ export default function () {
     return (
         <CardScroll title='Our Best Workers'>
             {Array.from({length: 20}, (item, index) => 
-                <div key={index} data-aos="fade-up" className="relative">
+                <div key={index} data-aos="fade-in" className="relative">
                     <div className="w-[500px] h-[250px] max-[1165px]:w-[300px] max-[1165px]:h-[500px] border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative grid grid-cols-10">
                         <div className="image col-span-4 max-[1165px]:col-span-10">
                             <img src="/images/pedwuma.jpg" className="object-cover h-full w-full " />
