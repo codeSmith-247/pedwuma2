@@ -63,13 +63,13 @@ export default function() {
     return (
         <section>
             <h1 className="orb font-semibold text-xl">Dashboard</h1>
-            <div className="summary grid-box-fit gap-4 my-3" style={{"--width": "200px"}}>
+            <div className="summary grid-box-fit gap-4 my-3" style={{"--width": "230px"}}>
                 {stats.map( (item, index) => 
                     <Cards.StatCard title={item?.name} icon={item?.icon} value={item?.value}/>
                 )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-6">
+            <div className="grid grid-cols-2 max-[800px]:grid-cols-1 gap-3 mt-6">
                 <div className="bg-white rounded-md shadow-lg relative">
                     <div className="title absolute top-2 left-2 text font-semibold orb">Bookings This Week</div>
                     <LineChart
@@ -79,7 +79,6 @@ export default function() {
                             data: [2, 5.5, 2, 8.5, 1.5, 5],
                             },
                         ]}
-                        width={500}
                         height={300}
                         fullWidth
                     />
@@ -93,7 +92,6 @@ export default function() {
                             data: [2, 5.5, 2, 8.5, 1.5, 5, 10, ],
                             },
                         ]}
-                        width={500}
                         height={300}
                     />
                 </div>

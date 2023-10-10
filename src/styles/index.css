@@ -48,3 +48,13 @@
     width: 100%;
 }
 
+@media only screen and (max-width: 1165px) {
+    .dashboard {
+        width: calc(100vw + var(--menu));
+    }
+
+    .dashboard.active {
+        width: 100vw;
+    }
+}
+
