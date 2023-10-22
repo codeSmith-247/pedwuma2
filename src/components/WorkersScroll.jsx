@@ -16,7 +16,7 @@ export default function () {
                                     <i className="bi bi-geo-alt border rounded-full h-[20px] w-[20px] flex items-center justify-center"></i>
                                     <span className="" style={{width: 'calc(100% - 35px)'}}>Amasaman, Temah, Kumasi, Accra...</span>
                                 </div>
-                                <div className="title orb text-lg leading-none my-3">Adeniyi David Shalom</div>
+                                <div className="title orb text-lg my-3">Adeniyi David Shalom</div>
 
                                 <p className="text-xs mb-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed consequuntur sint asperiores ipsum quae ipsa, ipsam natus inventore cupiditate! Ut...</p>
 

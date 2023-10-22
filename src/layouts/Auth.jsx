@@ -20,10 +20,10 @@ export default function ({ links = [] }) {
 
                 <div className="links p-3">
                     {links.map((item, index) => 
-                        <div key={index} className="border border-gray-200 px-1 py-2 my-2 rounded-md hover:bg-white hover:text-blue-600 ">
+                        <Link to={item?.link} key={index} className="border border-gray-200 px-1 py-2 my-2 block rounded-md hover:bg-white hover:text-blue-600 ">
                             <i className={`bi bi-${item?.icon} mx-3`}></i>
                             <span>{item?.name}</span>
-                        </div>
+                        </Link>
                     )}
                 </div>
             </div>

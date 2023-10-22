@@ -1,17 +1,91 @@
+import { Skeleton } from "@mui/material";
 
+import { safeGet } from "functions/utils/Fixers";
 
+import { Btn } from "./";
 
-
-
-export function StatCard({ title, value, icon}) {
+export function Stat({ title, value, icon, loading=false}) {
+    if(!loading)
     return (
         <div className="rounded w-[200px] border border-black shadow hover:shadow-lg p-5 py-2.5 flex items-center hover:bg-blue-50 bg-opacity-10">
             <div className="flex-grow">
                 <div className="title orb whitespace-nowrap">{title}</div>
-                <div className="orb text-xl py-2 font-semibold">{value}</div>
+                <div className="orb text-xl py-05 font-semibold">{value}</div>
             </div>
 
             <i className={`bi bi-${icon} text-2xl h-[50px] w-[50px] border border-black rounded-full flex items-center justify-center`}></i>
+        </div>
+    );
+
+    return (
+        <Skeleton height={70} variant="rounded"/>
+    );
+}
+
+
+export function Profile({ item, loading=false }) {
+
+    if(loading || !safeGet(item, ["Work Experience & Certification", "Rating"]) == "undefined")
+    return (
+        <div className="profile shadow rounded w-[250px] p-2">
+            <Skeleton height={200} />
+            <div className="details py-3">
+                <div className="font-semibold orb"><Skeleton /></div>
+                <div className="my-2">
+                    <div className="flex gap-2 items-center">
+                        {Array.from({length: 5}, (item, index) => <i className="bi bi-star-fill text-gray-400" />)}
+                    </div>
+                    <Skeleton />
+                    <Skeleton />
+                </div>
+            </div>
+
+            <Skeleton height={40}/>
+        </div>
+    );
+
+    else
+    return (
+        <div className="profile shadow rounded w-[300px] p-2">
+            <div className="image h-[200px] overflow-hidden rounded">
+                <img src="/images/pedwuma.jpg" className="object-cover h-full w-full" />
+            </div>
+            <div className="details py-3">
+                <div className="font-semibold orb">{safeGet(item, ["Service Information", "Service Category"])}</div>
+                <div className="my-2">
+                    <div className="flex gap-2 items-center">
+                        {Array.from({length: safeGet(item, ["Work Experience & Certification", "Rating"] )}, (item, index) => <i className="bi bi-star-fill text-yellow-400" />)}
+                        {Array.from({length: 5 - 3}, (item, index) => <i className="bi bi-star-fill text-gray-400" />)}
+                    </div>
+                    <div className="text-sm p-1"> <span className="font-semibold text-xs">Experience: </span>{safeGet(item, ["Service Information", "Expertise"])}</div>
+                    <div className="text-sm p-1"> <span className="font-semibold text-xs">Charge Rate: </span> Ghc {safeGet(item, ["Service Information", "Charge"])} / {safeGet(item, ["Service Information", "Charge Rate"])}</div>
+                </div>
+            </div>
+
+            <Btn.SmallBtn fullWidth>Edit Profile</Btn.SmallBtn>
+        </div>
+    )
+}
+
+
+export function Description({ title="", description="", btnText="", image="/images/pedwuma.jpg", topInfo=<><span className="orb">123</span> workers</>, classname="", ...props }) {
+    return (
+        <div className={`${classname} h-[500px] max-[1165px]:w-[300px] max-[1165px]:h-[400px] border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative group`} {...props}>
+            <div className="image h-[70%] ">
+                <img src={image} className="object-cover h-full w-full " />
+            </div>
+            <div className="absolute -bottom-[40px] max-[1165px]:-bottom-[0%] group-hover:bottom-0 max-[1165px]:group-hover:bottom-[40px] left-0 w-full bg-white">
+                <div className="p-5">
+                    <div className="title orb text-xl mb-3">{title}</div>
+                    <p className="text-sm max-[1165px]:text-xs">
+                        {description}
+                    </p>
+                </div>
+
+                <Btn.MediumBtn styles={{borderRadius: '0px', height: '40px', paddingTop: '1.25rem'}} fullWidth>{btnText}</Btn.MediumBtn>
+            </div>
+
+            <div className="absolute top-1 left-1 p-2 bg-black bg-opacity-90 text-white rounded-md group-hover:bg-blue-600 orb">{topInfo}</div>
         </div>
     );
 }

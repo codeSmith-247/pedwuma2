@@ -7,92 +7,65 @@ import { Link } from "react-router-dom";
 import { BigBtn } from "./Buttons"; 
 import NoResults from "./NoResults";
 
-import { LocationSuggestions, LocationDetails } from "../functions/utils/Locations";
+import { useServiceSearch } from "../functions/reads/Services";
+import { useLocationSearch, useLocationDetails } from "../functions/reads/General";
+import { Search } from "../components/Search";
 
-function LocationSearch({ callback = console.log }) {
+export function LocationSearch({ callback = console.log, ...props }) {
 
-    const [ showResult, setShowResult ] = useState(false);
-    const [ loading, setLoading ] = useState(false);
-    const [ predictions, setPredictions ] = useState([]);
-    const [ searchInput, setSearchInput ] = useState('');
+    const [ searchInput, setSearchInput ] = useState("");
 
-    const handleLocationSearch = (e) => {
-
-        setSearchInput(e.target.value);
-
-        if(searchInput.replaceAll(" ", "") == "") {
-            resetValues()
-            return false;
-        }
-
-        if(loading) return false;
-
-        setLoading(true);
-
-        LocationSuggestions(searchInput, (locationData) => {
-            console.log(locationData);
-            setLoading(false);
-            setShowResult(true);
-            setPredictions(locationData);
-        });
-
-    }
-
-    const handleSelectResult = (data) => {
-        callback(data);
-
-        setSearchInput(data?.description);
-
-        setShowResult(false);
-        setLoading(false);
-        setPredictions([]);
-    }
-
-    const resetValues = () => {
-        setLoading(false);
-        setShowResult(false);
-        setPredictions([]);
-    }
-
-
+    const { data, isLoading, isError } = useLocationSearch(searchInput);
+    const charlie = useLocationSearch(searchInput);
 
     return (
-        <div className="relative">
-            <FormControl fullWidth sx={{marginBottom: "2rem"}}>
-                <InputLabel htmlFor="outlined-adornment-amount">Your Location</InputLabel>
-                <OutlinedInput
-                    id="outlined-adornment-amount"
-                    startAdornment={<InputAdornment position="start"> <i className="bi bi-geo-alt"></i> </InputAdornment>}
-                    label="Your Location"
-                    name="location"
-                    placeholder="E.g Stadium Junction, Amasaman, Accra"
-                    onChange={handleLocationSearch}
-                    value={searchInput}
-                />
-            </FormControl>
-            { showResult &&
+        <Search
+            data={data}
+            isLoading={isLoading || isError}
 
-                <div className="absolute z-[20] top-[65%] shadow-xl bg-white left-0 w-full h-max">
-                    <div data-aos="fade-in" className=" max-h-[250px] overflow-y-scroll z-0">
-                        {predictions.map((item, index) => 
-                            <div onClick={() => LocationDetails(item, handleSelectResult)} key={index} className="px-5 py-3 text-md hover:bg-gray-200 active:bg-blue-600 active:text-white">
-                                {item.description}
-                            </div>
-                        )}
-
-                    </div>
-                    <i onClick={resetValues} className="absolute -top-2 -right-2 bg-white h-[30px] w-[30px] flex items-center justify-center rounded-full shadow-xl hover:bg-red-500 hover:text-white z-10 bi bi-x"></i>
+            id="outlined-adornment-amount"
+            startAdornment={<InputAdornment position="start"><i className="bi bi-geo-alt"></i></InputAdornment>}
+            label="Your Location"
+            name="service"
+            placeholder="E.g Accra, Amasaman, Tema, Ejisu"
+            searchCallback={(data, setInput) => {callback(data); setInput(data?.description)}}
+            searchingCallback={setSearchInput}
+            resultUi={ (item) =>
+                <div onClick={() => callback(item)} className="px-5 py-3 text-md hover:bg-gray-200 active:bg-blue-600 active:text-white">
+                    {item.description}
                 </div>
             }
-
-            { (!showResult && loading) &&
-
-                <div data-aos="fade-in" className="absolute z-[20] top-[65%] shadow-xl bg-white left-0 w-full h-[250px] flex items-center justify-center">
-                    <CircularProgress />
-                </div>
-            }
-        </div>
+            {...props}
+        />
     );
+}
+
+export function ServiceSearch({ callback = console.log, status="active", ...props }) {
+
+    const [ searchInput, setSearchInput ] = useState("");
+
+    const { data, isLoading, isError } = useServiceSearch(searchInput, status);
+
+    return (
+        <Search
+            data={data}
+            isLoading={isLoading || isError}
+            id="outlined-adornment-amount"
+            startAdornment={<InputAdornment position="start"><i className="bi bi-person-circle"></i></InputAdornment>}
+            label="What Service do you need?"
+            name="service"
+            placeholder="E.g Mason, Carpenter, Fitter, Mechanic"
+            searchCallback={(data, setInput) => {callback(data); setInput(data?.name)}}
+            searchingCallback={setSearchInput}
+            resultUi={ (item) =>
+                <div onClick={() => callback(item)} className="px-5 py-3 text-md hover:bg-gray-200 active:bg-blue-600 active:text-white">
+                    {item.name}
+                </div>
+            }
+            {...props}
+        />
+    );
+
 }
 
 export default function() {
@@ -107,18 +80,9 @@ export default function() {
 
                 <div className="p-10 max-[475px]:p-5">
                     
-                    <LocationSearch />
+                    <LocationSearch sx={{marginBottom: "2rem"}}/>
 
-                    <FormControl fullWidth sx={{marginBottom: "2rem"}}>
-                        <InputLabel htmlFor="outlined-adornment-amount">What Service do you need?</InputLabel>
-                        <OutlinedInput
-                            id="outlined-adornment-amount"
-                            startAdornment={<InputAdornment position="start"><i className="bi bi-person-circle"></i></InputAdornment>}
-                            label="What Service do you need?"
-                            name="service"
-                            placeholder="E.g Mason, Carpenter, Fitter, Mechanic"
-                        />
-                    </FormControl>
+                    <ServiceSearch sx={{marginBottom: "2rem"}}/>
 
                     <div className="grid grid-cols-1 gap-2">
 

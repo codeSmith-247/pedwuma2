@@ -1,1 +1,9 @@
-export { default as Home } from './Home';
+export { default as Home            }           from './Home';
+export { default as Workers         }           from './Workers';
+export { default as Worker          }           from './Worker';
+export { default as Jobs            }           from './Jobs';
+export { default as Job             }           from './Job';
+export { default as Services        }           from './Services';
+export { default as Login           }           from './Login';
+export { default as Signup          }           from './Signup';
+export { default as ResetPassword   }           from './ResetPassword';

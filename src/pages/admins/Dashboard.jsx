@@ -1,6 +1,10 @@
 
 import { Link } from "react-router-dom";
-import { Cards, BoxSearch, Nav, SideScroll, Btn, WorkersScroll, CategoriesScroll, Footer, Testimonials } from "../../components";
+import { useTotal, useData } from "functions/reads/General";
+import { updateAllDocs } from "functions/updates/General";
+import { getPast7Days, getHumanReadableDateDifference, readableDate } from "functions/utils/Fixers";
+import { Btn, EmptyBox } from "components";
+import { serverTimestamp } from "firebase/firestore";
 
 import { LineChart } from '@mui/x-charts/LineChart';
 
@@ -11,6 +15,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+
+import StatCards from "./dashboard/StatCards";
+
 
 function createData(
   name,
@@ -33,50 +40,36 @@ const rows = [
 
 export default function() {
 
-    const stats = [
-        {
-            name: 'Total Jobs',
-            icon: 'box',
-            value: 2345
+    const [ dayNames, dayTimestamps ] = getPast7Days();
 
-        },
-        {
-            name: 'Total Bookings',
-            icon: 'tag',
-            value: 2345
+    let jobsPast7Days = dayTimestamps.map( item => useTotal("Jobs", item[0], item[1]));
+    jobsPast7Days = jobsPast7Days.map( item => typeof(item?.data) == "undefined" ? 0 : item?.data );
 
-        },
-        {
-            name: 'Total Workers',
-            icon: 'person-workspace',
-            value: 2345
+    let bookingsPast7Days = dayTimestamps.map( item => useTotal("Jobs", item[0], item[1]));
+    bookingsPast7Days = bookingsPast7Days.map( item => typeof(item?.data) == "undefined" ? 0 : item?.data );
 
-        },
-                {
-            name: 'Total Employers',
-            icon: 'people',
-            value: 2345
 
-        },
-    ]
+    const { data, isLoading, isError } = useData({target: "Jobs"});
+    console.log(data);
+
+    // updateAllDocs("Handyman Jobs Applied", {"Start Date": serverTimestamp() });
+    // updateAllDocs("Handyman Jobs Applied", {"End Date":   serverTimestamp() });
+
 
     return (
         <section>
             <h1 className="orb font-semibold text-xl">Dashboard</h1>
-            <div className="summary grid-box-fit gap-4 my-3" style={{"--width": "230px"}}>
-                {stats.map( (item, index) => 
-                    <Cards.StatCard title={item?.name} icon={item?.icon} value={item?.value}/>
-                )}
-            </div>
+            
+            <StatCards />
 
             <div className="grid grid-cols-2 max-[800px]:grid-cols-1 gap-3 mt-6">
                 <div className="bg-white rounded-md shadow-lg relative">
-                    <div className="title absolute top-2 left-2 text font-semibold orb">Bookings This Week</div>
+                    <div className="title absolute top-2 left-2 text font-semibold orb">Bookings For The Last 7 Days</div>
                     <LineChart
-                        xAxis={[{ data: [1, 2, 3, 5, 8, 10] }]}
+                        xAxis={[{ scaleType: 'point', data: dayNames.map(day => day.slice(0,3) ).slice(0, bookingsPast7Days?.length) }]}
                         series={[
                             {
-                            data: [2, 5.5, 2, 8.5, 1.5, 5],
+                            data: bookingsPast7Days,
                             },
                         ]}
                         height={300}
@@ -84,12 +77,12 @@ export default function() {
                     />
                 </div>
                 <div className="bg-white rounded-md shadow-lg relative">
-                    <div className="title absolute top-2 left-2 text font-semibold orb">Jobs This Week</div>
+                    <div className="title absolute top-2 left-2 text font-semibold orb">Jobs For The Last 7 Days</div>
                     <LineChart
-                        xAxis={[{ scaleType: 'point', data: ["Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun"] }]}
+                        xAxis={[{ scaleType: 'point', data: dayNames.map(day => day.slice(0,3) ).slice(0, jobsPast7Days?.length) }]}
                         series={[
                             {
-                            data: [2, 5.5, 2, 8.5, 1.5, 5, 10, ],
+                            data: jobsPast7Days,
                             },
                         ]}
                         height={300}
@@ -105,31 +98,37 @@ export default function() {
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                     <TableHead>
                     <TableRow>
-                        <TableCell>Dessert (100g serving)</TableCell>
-                        <TableCell align="right">Calories</TableCell>
-                        <TableCell align="right">Fat&nbsp;(g)</TableCell>
-                        <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-                        <TableCell align="right">Protein&nbsp;(g)</TableCell>
+                        <TableCell>Service Provider</TableCell>
+                        <TableCell>Start Date</TableCell>
+                        <TableCell>Duration</TableCell>
+                        <TableCell>Charge</TableCell>
+                        <TableCell></TableCell>
                     </TableRow>
                     </TableHead>
                     <TableBody>
-                    {rows.map((row) => (
-                        <TableRow
-                        key={row.name}
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                        <TableCell component="th" scope="row">
-                            {row.name}
-                        </TableCell>
-                        <TableCell align="right">{row.calories}</TableCell>
-                        <TableCell align="right">{row.fat}</TableCell>
-                        <TableCell align="right">{row.carbs}</TableCell>
-                        <TableCell align="right">{row.protein}</TableCell>
-                        </TableRow>
-                    ))}
+                    {typeof(data) != 'undefined' && 
+                        data[0]?.map((row) => (
+                            <TableRow
+                            key={row.name}
+                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                            >
+                            <TableCell>
+                                {row.Name}
+                            </TableCell>
+                            <TableCell>{readableDate(row["Start Date"])}</TableCell>
+                            <TableCell>{getHumanReadableDateDifference(row["Start Date"], row["End Date"])}</TableCell>
+                            <TableCell>Ghc{row["Charge"]} / {row["Charge Rate"]}</TableCell>
+                            <TableCell>
+                                <Btn.SmallBtn>View Details</Btn.SmallBtn>
+                            </TableCell>
+                            </TableRow>
+                        ))
+                    }
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <EmptyBox load={typeof(data) != 'undefined' && data[0]?.length <= 0} title="No Bookings Yet" text=""/>
         </section>
     );
 }

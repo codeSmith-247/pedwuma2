@@ -9,8 +9,8 @@ export const AdminLinks = [
 
     {
         name: 'Bookings',
-        icon: 'grid',
-        link: '',
+        icon: 'ticket',
+        link: '/admin/bookings',
     },
 
     {
@@ -18,7 +18,56 @@ export const AdminLinks = [
         icon: 'box',
         link: '',
     },
+    {
+        name: 'Users',
+        icon: 'people',
+        link: '',
+    },
 
+    {
+        name: 'Categories',
+        icon: 'stack',
+        link: '/admin/categories',
+    },
+
+    {
+        name: 'Plans',
+        icon: 'coin',
+        link: '/admin/plans',
+    },
+
+    {
+        name: 'Settings',
+        icon: 'gear',
+        link: '',
+    },
+];
+
+
+export const WorkerLinks = [
+    {
+        name: 'Dashboard',
+        icon: 'grid',
+        link: '',
+    },
+
+    {
+        name: 'Bookings',
+        icon: 'ticket',
+        link: '/admin/bookings',
+    },
+
+    {
+        name: 'My Profiles',
+        icon: 'person',
+        link: '/admin/profiles',
+    },
+
+    {
+        name: 'Jobs',
+        icon: 'box',
+        link: '',
+    },
     {
         name: 'Users',
         icon: 'people',
@@ -29,6 +78,12 @@ export const AdminLinks = [
         name: 'Categories',
         icon: 'stack',
         link: '',
+    },
+
+    {
+        name: 'Plans',
+        icon: 'coin',
+        link: '/admin/plans',
     },
 
     {

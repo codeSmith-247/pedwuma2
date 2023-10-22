@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { ImageBg, BoxSearch, Nav, SideScroll, Btn, WorkersScroll, CategoriesScroll, Footer, Testimonials } from "../../components";
+import { ImageBg, BoxSearch, SideScroll, Btn, WorkersScroll, CategoriesScroll, Testimonials } from "components";
 
 
 export default function() {
@@ -9,7 +9,6 @@ export default function() {
             <ImageBg image={`/images/pedwuma.jpg`}>
 
                 <div className="h-max bg-gradient-to-bl from-black relative ">
-                    <Nav />
                     <BoxSearch />
                 </div>
 
@@ -48,8 +47,6 @@ export default function() {
             <CategoriesScroll />
 
             <Testimonials />
-
-            <Footer />
 
         </>
     );

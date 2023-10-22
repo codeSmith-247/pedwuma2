@@ -24,6 +24,7 @@
 
 .dashboard.active {
     width: calc(100vw + var(--menu));
+    --bg: #2222223c;
 }
 
 .dashboard .menu {
@@ -32,6 +33,30 @@
 
 .dashboard .content-area {
     width: calc(100% - var(--menu));
+}
+
+.splitboard {
+    --width: 300px;
+}
+
+.splitboard .left {
+    width: var(--width);
+}
+
+.splitboard .right {
+    width: calc(100% - var(--width));
+}
+
+@media only screen and (max-width: 1185px) {
+    
+    .splitboard .left {
+        position: absolute;
+    }
+
+    .splitboard .right {
+        width: 100%;
+    }
+    
 }
 
 .grid-box-fill {
