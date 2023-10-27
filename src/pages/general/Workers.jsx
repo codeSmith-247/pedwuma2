@@ -1,16 +1,45 @@
 import { useState } from "react";
 
-import { Link } from "react-router-dom";
-import { Header, Btn } from "components";
+import { Link, useNavigate } from "react-router-dom";
+import { Header, Btn, Cards, PopularServices } from "components";
 
 import { LocationSearch, ServiceSearch } from "../../components/BoxSearch";
 
 import { InputLabel, MenuItem, FormControl, Select } from '@mui/material'
 
+import { useData } from "functions/reads/General";
+
+import { encrypt } from "functions/utils/Fixers";
+
 
 export default function() {
 
     const [ showMenu, setShowMenu ] = useState(false);
+    const navigate = useNavigate();
+
+    const { data } = useData({
+        target: "Booking Profile",
+        callback: async (person) => {
+            person.user = await getData({
+                target: "users",
+                conditions: [ where("User ID", "==", person["User ID"]) ],
+                callback: async (user) => {
+                    user.location = await getData({
+                        target: "Location",
+                        conditions: [ where("User ID", "==", person["User ID"]) ]
+                    });
+
+                    user.location = safeGet(user.location, ["0", "0"], {});
+
+                    return user;
+                }
+            });
+
+            person.user = safeGet(person.user, ["0", "0"], {});
+
+            return person;
+        }
+    });
 
     return (
         <>
@@ -70,50 +99,18 @@ export default function() {
 
                         <h1 className="orb my-5">Popular Services</h1>
 
-                        <div className="">
-                            {Array.from({length: 20}, (item, index) => 
-                                <div key={index} className="relative flex border mb-3 rounded-md overflow-hidden">
-                                    <div className="image  h-[60px]">
-                                        <img src="/images/pedwuma.jpg" className="object-cover h-full w-full " />
-                                    </div>
-                                    <div className="bg-white px-3 py-2 ">
-                                        <div className="text-gray-600 flex items-center gap-2 text-xs">
-                                            <span className="" style={{width: 'calc(100% - 35px)'}}>Amasaman, Temah, Kumasi, Accra...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <PopularServices callback={()=>{}} />
                     </div>
-                    <div className="right flex flex-wrap gap-5 min-h-screen">
-                        {Array.from({length: 20}, (item, index) => 
-                            <div key={index} className="relative flex-grow w-[250px] h-max border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md ">
-                                <div className=" overflow-hidden relative grid grid-cols-10 h-full rounded-md">
-                                    <div className="image col-span-10 h-[250px]">
-                                        <img src="/images/pedwuma.jpg" className="object-cover h-full w-full " />
-                                    </div>
-                                    <div className="bg-white p-4 col-span-10">
-                                            <div className="text-gray-600 flex items-center gap-2 mb-1 text-xs">
-                                                <i className="bi bi-geo-alt border rounded-full h-[20px] w-[20px] flex items-center justify-center"></i>
-                                                <span className="" style={{width: 'calc(100% - 35px)'}}>Amasaman, Temah, Kumasi, Accra...</span>
-                                            </div>
-                                            <div className="title orb text-lg my-3">Adeniyi David Shalom</div>
+                    <div className="right min-h-screen flex grid-box-fill gap-3" style={{"--width": "240px"}}>
+                        {!data && Array.from({length: 20}, (item, index) => 
+                            <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate("/worker")} loading={true} name={<div className="orb font-semibold mb-1">David Shalom</div>}/>
+                        )}
 
-                                            <p className="text-xs mb-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed consequuntur sint asperiores ipsum quae ipsa, ipsam natus inventore cupiditate! Ut...</p>
-
-                                            <div className="orb mb-3">
-                                                <span className="orb">Ghc</span>
-                                                <span className="orb text-lg">655</span>
-                                            </div>
-                                        <Link to="/worker">
-                                            <Btn.SmallBtn >Book Now</Btn.SmallBtn>
-                                        </Link>
-                                    </div>
-                                </div>
-                                <div className="absolute -top-3 -right-3 h-[40px] w-[40px] border border-gray-200 rounded-full bg-white shadow">
-                                    <img src="/images/verify-badge.png" alt="" className="object-cover h-full w-full" />
-                                </div>
-                            </div>
+                        {data && data[0]?.map((item, index) => 
+                        {
+                            console.log(item, "over here");
+                            return <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate(`/worker/${encrypt(item.id)}`)} item={item} name={<div className="orb font-semibold mb-1">{safeGet(item.user, ["First Name"], "")} {safeGet(item.user, ["Last Name"], "")}</div>}/>
+                        }
                         )}
                     </div>
                 </div>

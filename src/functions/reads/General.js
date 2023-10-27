@@ -1,6 +1,6 @@
 
 import { useQuery } from "react-query";
-import { collection, getDocs, getCountFromServer, Timestamp, query, where, and, or, orderBy, limit, startAfter } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getCountFromServer, Timestamp, query, where, and, or, orderBy, limit, startAfter, } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import refs from "../refs";
 
@@ -9,6 +9,35 @@ const startDate = Timestamp.fromDate(new Date(0));
 const endDate = new Date();
 endDate.setHours(23, 59, 59, 999);
 
+
+export const getDocById = async (target, id) => {
+
+    try {
+        
+        const planRef = doc(db, target, id);
+    
+        const snapshot = await getDoc(planRef);
+    
+        if(snapshot.exists()) return snapshot.data();
+    
+        else return "not_exists";
+
+    }
+    catch( error ) {
+        console.log(error);
+        return false;
+    }
+
+}
+
+export const useDocById = (target, id, callback=()=>{}) => {
+
+    return useQuery([ "getDoc", target, id ], async () => {
+        const result = await getDocById(target, id);
+
+        return result;
+    }, {onCompleted: (data) => callback(data)});
+}
 
 export const useTotal = (target="", start = startDate, end = endDate) => {
 
@@ -42,9 +71,10 @@ export const useData = ({
         ),
         orderBy("Upload Timestamp", "desc"),
         limit(35)
-    ]
+    ],
+    callback = null
 }) => {
-    return useQuery(["data", target, page, start, end], async () => {
+    return useQuery(["data", target, page, start, end, conditions, callback], async () => {
 
         page = page == 1 ? null : page;
 
@@ -55,16 +85,75 @@ export const useData = ({
 
         const snapshot = await getDocs(queryBuild);
         
+        let result = snapshot.docs.map( (doc) => { return {id: doc.id , ...doc.data()} });
+
+        if(callback) 
+
+        for( let i = 0; i < result.length; i++ ) {
+            let data = result[i];
+
+            data = await callback(data);
+
+            result[i] = data;
+        }
 
         return [
             //filters the result to include the document id
-            snapshot.docs.map( (doc) => { return {id: doc.id , ...doc.data()} }), 
+            result, 
 
             //return the last document for pagination purposes
             snapshot.docs[snapshot.docs.length - 1]
         ]
 
     });
+}
+
+export const getData = async ({
+    target="", 
+    page = null, 
+    start = startDate, 
+    end = endDate, 
+    conditions=[
+        and(
+            where("Upload Timestamp", "<=", end), 
+            where("Upload Timestamp", ">=", start)
+        ),
+        orderBy("Upload Timestamp", "desc"),
+        limit(35)
+    ],
+    callback = null
+}) => {
+    
+
+        page = page == 1 ? null : page;
+
+        const queryBuild  =  
+            query( collection(db, target) , 
+                ...conditions
+            );
+
+        const snapshot = await getDocs(queryBuild);
+        
+        let result = snapshot.docs.map( (doc) => { return {id: doc.id , ...doc.data()} });
+
+        if(callback) 
+
+        for( let i = 0; i < result.length; i++ ) {
+            let data = result[i];
+
+            data = await callback(data);
+
+            result[i] = data;
+        }
+
+        return [
+            //filters the result to include the document id
+            result, 
+
+            //return the last document for pagination purposes
+            snapshot.docs[snapshot.docs.length - 1]
+        ]
+
 }
 
 export const useTotalUserType = (type) => {
@@ -86,28 +175,46 @@ export const useLocationSearch = (userInput) => {
         let result = [];
 
         try {
+          const autocomplete = new window.google.maps.places.AutocompleteService();
+        
+          await autocomplete.getPlacePredictions(
+            {
+              input: userInput,
+              componentRestrictions: { country: 'GH' }, // Restrict to Ghana
+              types: ["geocode"]
+            },
+            async (predictions, status) => {
+                result = predictions;
 
-            const autocomplete = new window.google.maps.places.AutocompleteService();
-        
-            await autocomplete.getPlacePredictions(
-              {
-                input: userInput,
-                componentRestrictions: { country: 'GH' }, // Restrict to Ghana
-              },
-        
-              (predictions, status) => {
                 if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-                  result = predictions;
-                }
+                    // Now, for each prediction, fetch place details to get lat/lng
+                    const placeService = new window.google.maps.places.PlacesService(document.createElement("div"));
+                    const promises = predictions.map((prediction) => {
+                    return new Promise((resolve) => {
+                        placeService.getDetails(
+                        { placeId: prediction.place_id },
+                        (place, placeStatus) => {
+                            if (placeStatus === window.google.maps.places.PlacesServiceStatus.OK) {
+                            // Add lat/lng to the prediction
+                            prediction.lat = place.geometry.location.lat();
+                            prediction.lng = place.geometry.location.lng();
+                            }
+                            resolve();
+                        }
+                        );
+                    });
+                    });
+            
+                    // Wait for all place details requests to complete
+                    await Promise.all(promises);
+            
               }
-            );
-
-            console.log(userInput, result);
-
-            return result;
-        }
-        catch (error) {
-            return result;
+            }
+          );
+        
+          return result;
+        } catch (error) {
+          return result;
         }
 
     });
@@ -134,8 +241,6 @@ export const useLocationDetails = (prediction) => {
 
 export const userExists = async (email, phone) => {
 
-    console.log(email, phone);
-
     const queryBuild = 
         query( refs.users, 
             or(
@@ -153,3 +258,6 @@ export const userExists = async (email, phone) => {
 
     return false;
 }
+
+
+

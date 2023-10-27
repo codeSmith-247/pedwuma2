@@ -5,12 +5,36 @@ import { Header, Btn } from "components";
 
 import { LocationSearch, ServiceSearch } from "../../components/BoxSearch";
 
-import { InputLabel, MenuItem, FormControl, Select } from '@mui/material'
+import { InputLabel, MenuItem, FormControl, Select } from '@mui/material';
+
+import { useData, getData } from "functions/reads/General";
+import { safeGet, encrypt } from "functions/utils/Fixers";
+
+import { Skeleton } from "@mui/material";
+
+import { where } from "firebase/firestore";
 
 
 export default function() {
 
     const [ showMenu, setShowMenu ] = useState(false);
+
+    const { data } = useData({
+        target: "Jobs",
+        conditions: [],
+        callback: async (job) => {
+            job.user = await getData({
+                target: "users",
+                conditions: [ where( "User ID", "==", job["Client ID"]) ]
+            });
+
+            job.user = safeGet(job.user, ["0", "0"], {});
+
+            return job;
+        }
+    });
+
+    console.log(data);
 
     return (
         <>
@@ -54,31 +78,31 @@ export default function() {
                 </div>
 
                 <div className="overflow-hidden h-max splitboard flex gap-4 relative top-0 right-0" style={{"--menu": '300px'}}>
-                    <div className="right grid max-[865px]:grid-cols-1 gap-5 min-h-screen">
-                        {Array.from({length: 20}, (item, index) => 
-                            <div key={index} className="min-h-[222px] border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative grid grid-cols-10">
+                    <div className="right min-h-screen">
+                        {data && data[0].map( (item, index) => 
+                            <div key={index} className="min-h-[222px] mb-4 border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative grid grid-cols-10">
                                 <div className="image col-span-2 max-[865px]:col-span-3 max-[550px]:col-span-10 max-[550px]:h-[250px] ">
-                                    <img src="/images/pedwuma.jpg" className="object-cover h-full w-full " />
+                                    <img src={safeGet(item.user, ["Pic"], "/images/user.png")} className="object-cover h-full w-full " />
                                 </div>
                                 <div className="col-span-6 bg-white p-4 max-[865px]:col-span-7 max-[550px]:col-span-10">
                                     <div className="text-gray-600 flex items-center gap-2 mb-1 text-xs">
                                         <i className="bi bi-geo-alt border rounded-full h-[20px] w-[20px] flex items-center justify-center"></i>
-                                        <span className="" style={{width: 'calc(100% - 35px)'}}>Amasaman, Temah, Kumasi, Accra...</span>
+                                        <span className="" style={{width: 'calc(100% - 35px)'}}>{safeGet(item, ["Address"], "")}</span>
                                     </div>
-                                    <div className="title orb text-lg my-3">Very Good Mechanic Needed for 5 Car Repairs</div>
+                                    <div className="title orb text-lg my-3">{safeGet(item, ["Job Details", "title"], `${safeGet(item, ["Service Information", "Service Category"], "")} (${safeGet(item, ["Service Information", "Service Provided"], "")})`)}</div>
     
-                                    <p className="text-xs mb-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed consequuntur sint asperiores ipsum quae ipsa, ipsam natus inventore cupiditate! Ut...</p>
+                                    <p className="text-xs mb-3">{safeGet(item, ["Job Details", "description"], "")}</p>
     
                                     <div className="font mb-1 text-sm">
-                                        Experience: Expert(+6 years)
+                                        Experience: {safeGet(item, ["Service Information", "Expertise"], "")}
                                     </div>
 
                                     <div className="font mb-1 text-sm">
-                                        Minimum Rating: 5 stars
+                                        Service Needed: {safeGet(item, ["Service Information", "Service Provided"], "")}
                                     </div>
 
                                     <div className="font mb-1 text-sm">
-                                        Service Needed: House Cleaning
+                                        Service Category: {safeGet(item, ["Service Information", "Service Category"], "")}
                                     </div>
                                 </div>
                                 <div className="col-span-2 bg-blue-50 max-[865px]:col-span-10 max-[865px]:min-h-[150px] p-2 flex flex-col">
@@ -86,14 +110,52 @@ export default function() {
                                     <div className="flex flex-col items-center justify-center text-center flex-grow">
                                         <div className="orb mb-1">
                                             <span className="orb text-xs">Ghc</span>
-                                            <span className="orb text-lg">655</span>/Hour
+                                            <span className="orb text-lg">{safeGet(item, ["Service Information", "Charge"], "")}</span>/{safeGet(item, ["Service Information", "Charge Rate"], "")}
                                         </div>
 
-                                        <div className="orb text-xs">13 Applications</div>
+                                        <div className="orb text-xs">{safeGet(item, ["Job Details", "People Applied"], 0)} Applications</div>
                                     </div>
         
-                                    <Link to="/job">
+                                    <Link to={`/job/${encrypt(item.id)}`}>
                                         <Btn.SmallBtn fullWidth>Apply Now</Btn.SmallBtn>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                        {!data &&  Array.from({length: 20}, (item, index) => 
+                            <div key={index} className="min-h-[222px] mb-4 border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative grid grid-cols-10">
+                                    <div className="image col-span-2 max-[865px]:col-span-3 max-[550px]:col-span-10 max-[550px]:h-[250px] px-2">
+                                        <Skeleton height={"100%"} />
+                                    </div>
+                                <div className="col-span-6 bg-white p-4 max-[865px]:col-span-7 max-[550px]:col-span-10">
+                                    <div className="text-gray-600 flex items-center gap-2 mb-1 text-xs">
+                                        <i className="bi bi-geo-alt border rounded-full h-[20px] w-[20px] flex items-center justify-center"></i>
+                                        <span className="" style={{width: 'calc(100% - 35px)'}}><Skeleton /></span>
+                                    </div>
+                                    <div className="title orb text-lg my-3"><Skeleton height={30}/></div>
+    
+                                    <p className="text-xs mb-3">
+                                        <Skeleton height={50} />
+                                    </p>
+    
+                                    <div className="font mb-1 text-sm">
+                                        <Skeleton />
+                                    </div>
+
+                                    <div className="font mb-1 text-sm">
+                                        <Skeleton />
+                                    </div>
+                                </div>
+                                <div className="col-span-2 bg-blue-50 max-[865px]:col-span-10 max-[865px]:min-h-[150px] p-2 flex flex-col">
+
+                                    <div className="flex flex-col items-center justify-center text-center flex-grow">
+                                        <div className="orb mb-1"><Skeleton width={80}/></div>
+
+                                        <div className="orb text-xs"><Skeleton width={80} /></div>
+                                    </div>
+        
+                                    <Link>
+                                        <Skeleton />
                                     </Link>
                                 </div>
                             </div>

@@ -23,7 +23,7 @@ export function Stat({ title, value, icon, loading=false}) {
 }
 
 
-export function Profile({ item, loading=false }) {
+export function Profile({ item, loading=false, btnText="Edit Profile", name=<></>, onBtnClick=()=>{} }) {
 
     if(loading || !safeGet(item, ["Work Experience & Certification", "Rating"]) == "undefined")
     return (
@@ -46,29 +46,47 @@ export function Profile({ item, loading=false }) {
 
     else
     return (
-        <div className="profile shadow rounded w-[300px] p-2">
+        <div className="profile shadow rounded w-[300px] p-2 h-max">
             <div className="image h-[200px] overflow-hidden rounded">
-                <img src="/images/pedwuma.jpg" className="object-cover h-full w-full" />
+                <img src={safeGet(item, ["User Pic"], "/images/pedwuma.jpg")} className="object-cover h-full w-full" />
             </div>
-            <div className="details py-3">
-                <div className="font-semibold orb">{safeGet(item, ["Service Information", "Service Category"])}</div>
+            <div className="details py-1.5">
+                {name}
                 <div className="my-2">
                     <div className="flex gap-2 items-center">
                         {Array.from({length: safeGet(item, ["Work Experience & Certification", "Rating"] )}, (item, index) => <i className="bi bi-star-fill text-yellow-400" />)}
-                        {Array.from({length: 5 - 3}, (item, index) => <i className="bi bi-star-fill text-gray-400" />)}
+                        {Array.from({length: 5 - safeGet(item, ["Work Experience & Certification", "Rating"], 0)}, (item, index) => <i className="bi bi-star-fill text-gray-400" />)}
                     </div>
-                    <div className="text-sm p-1"> <span className="font-semibold text-xs">Experience: </span>{safeGet(item, ["Service Information", "Expertise"])}</div>
-                    <div className="text-sm p-1"> <span className="font-semibold text-xs">Charge Rate: </span> Ghc {safeGet(item, ["Service Information", "Charge"])} / {safeGet(item, ["Service Information", "Charge Rate"])}</div>
+                    <div className="font-semibold orb mt-2">{safeGet(item, ["Service Information", "Service Category"])}</div>
+                    <div className="font-semibold orb text-xs mb-2">{safeGet(item, ["Service Information", "Service Provided"])}</div>
+                    <div className="text-sm p-05 text-gray-500"> <span className="font-semibold text-xs">Experience: </span>{safeGet(item, ["Service Information", "Expertise"])}</div>
+                    <div className="text-sm p-05 text-gray-500"> <span className="font-semibold text-xs">Charge Rate: </span> Ghc {safeGet(item, ["Service Information", "Charge"])} / {safeGet(item, ["Service Information", "Charge Rate"])}</div>
                 </div>
             </div>
 
-            <Btn.SmallBtn fullWidth>Edit Profile</Btn.SmallBtn>
+            <Btn.SmallBtn onClick={onBtnClick} fullWidth>{btnText}</Btn.SmallBtn>
         </div>
     )
 }
 
+export function Loading() {
+    return (
+        <div className="profile shadow rounded w-[250px] p-2">
+            <Skeleton height={200} />
+            <div className="details py-3">
+                <div className="font-semibold orb"><Skeleton /></div>
+                <div className="my-2">
+                    <Skeleton />
+                    <Skeleton />
+                </div>
+            </div>
 
-export function Description({ title="", description="", btnText="", image="/images/pedwuma.jpg", topInfo=<><span className="orb">123</span> workers</>, classname="", ...props }) {
+            <Skeleton height={40}/>
+        </div>
+    );
+}
+
+export function Description({ title="", description="", btnText="", image="/images/pedwuma.jpg", topInfo=<><span className="orb">123</span> workers</>, classname="", onBtnClick=()=>{}, ...props }) {
     return (
         <div className={`${classname} h-[500px] max-[1165px]:w-[300px] max-[1165px]:h-[400px] border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative group`} {...props}>
             <div className="image h-[70%] ">
@@ -82,10 +100,37 @@ export function Description({ title="", description="", btnText="", image="/imag
                     </p>
                 </div>
 
-                <Btn.MediumBtn styles={{borderRadius: '0px', height: '40px', paddingTop: '1.25rem'}} fullWidth>{btnText}</Btn.MediumBtn>
+                <Btn.MediumBtn onClick={onBtnClick} styles={{borderRadius: '0px', height: '40px', paddingTop: '1.25rem'}} fullWidth>{btnText}</Btn.MediumBtn>
             </div>
 
             <div className="absolute top-1 left-1 p-2 bg-black bg-opacity-90 text-white rounded-md group-hover:bg-blue-600 orb">{topInfo}</div>
+        </div>
+    );
+}
+
+export function Small({ image="/images/pedwuma.jpg", title="Amasaman, Temah, Kumasi, Accra...", containerClass, loading=false, ...props }) {
+
+    if(loading) return (
+        <div className={`${containerClass} relative flex border-2 mb-3 rounded-md overflow-hidden bg-white`} {...props}>
+            <Skeleton height={60} width={100} />
+            <div className="px-3 py-2 " style={{width: 'calc(100% - 100px)'}}>
+                <div className="text-gray-600 flex items-center gap-2 text-xs">
+                    <Skeleton width={60}/>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className={`${containerClass} relative flex border-2 mb-3 rounded-md overflow-hidden bg-white`} {...props}>
+            <div className="image  h-[60px] w-[100px]">
+                <img src={image} className="object-cover h-full w-full " />
+            </div>
+            <div className="px-3 py-2 " style={{width: 'calc(100% - 100px)'}}>
+                <div className="text-gray-600 flex items-center gap-2 text-xs">
+                    <span className="">{title}</span>
+                </div>
+            </div>
         </div>
     );
 }

@@ -1,19 +1,20 @@
 
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDocs, query, where } from "firebase/firestore";
+import { doc, getDocs, query, where, and } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { errorAlert } from "../utils/Alert";
 import refs from "../refs";
+
+import { getDocById } from "./General";
 
 export const logIn = async (email, password) => {
 
     try {
         const auth = getAuth();
     
-        await signInWithEmailAndPassword(auth, email, password);
-
+        const signIn = await signInWithEmailAndPassword(auth, email, password);
     
-        const snapshot = await getDocs(refs.users, query( where("User ID", "==", auth.currentUser.uid)));
+        const snapshot = await getDocs(query(refs.users, where("User ID", "==", signIn.user.uid)));
 
         const result = snapshot.docs;
     
@@ -23,8 +24,14 @@ export const logIn = async (email, password) => {
             icon: "success",
             title: "Welcome Back"
         });
+
+        let data = result[0].data();
+
+        const plan = await getDocById("Plans", data["Plan"]);
         
-        return result[0].data();
+        data["plan"] = plan;
+        
+        return data;
     }
     catch (error) {
         console.log(error);
@@ -34,6 +41,27 @@ export const logIn = async (email, password) => {
             text: "Please check your email and password and try again."
         });
 
+        return false;
+    }
+}
+
+export const profileForService = async (service) => {
+    try {
+        const auth = getAuth();
+
+        const queryBuild = query(refs.bookingProfiles, 
+            and(
+                where("Service Information.Service Provided", "==", service),
+                where("User ID", "==", auth.currentUser.uid)
+            )
+        );
+
+        const result = await getDocs(queryBuild);
+
+        return result.docs;
+    }
+    catch(error) {
+        console.log(error);
         return false;
     }
 }

@@ -36,13 +36,13 @@ export default function() {
         setInDisplay("account_type");
     }
 
-    const handleAccountType = (accountType) => {
-        setAccountType(accountType);
+    const handleAccountType = (type) => {
+        setAccountType(type);
 
-        if(accountType !== "Regular Customer")
+        if(type !== "Regular Customer")
             setInDisplay("select_plan");
-
-        else createUser();
+    
+        else createUser(plan, reference, type);
     }
 
     const handleSelectedPlan = (plan, reference) => {
@@ -51,13 +51,13 @@ export default function() {
         createUser(plan, reference);
     }
 
-    const createUser = (userPlan=plan, userReference=reference) => {
+    const createUser = (userPlan=plan, userReference=reference, type=accountType) => {
         setLoad(true);
-        newUser({...userDetails, plan:userPlan, reference: userReference, accountType}).then((result) => {
+        newUser({...userDetails, plan:typeof(userPlan.id) !== "undefined" ? userPlan.id : "noplan", reference: userReference, accountType: type}).then((result) => {
             setLoad(false);
 
             if(result) {
-                dispatch(login({name: userDetails.name, loggedIn: true, role: accountType}));
+                dispatch(login({name: userDetails.name, loggedIn: true, role: type, plan: userPlan}));
                 navigate("/admin");
             }
             else {
@@ -71,13 +71,13 @@ export default function() {
 
 
     return (
-        <form className=" py-10 ">
+        <form className=" py-10 " >
 
             <Loading load={load} />
     
             {inDisplay == "user_details" && 
             
-                <div data-aos="fade-in" className={``}>
+                <div data-aos="fade-in" className={` ${accountType}`}>
                     <UserDetails userDetails={userDetails} callback={handleUserDetails}  />
                 </div>
             }

@@ -24,11 +24,9 @@ export default function () {
 
     const handleFeature = () => {
 
-        console.log(features);
 
         if(features.indexOf(inputs.feature) >= 0 || inputs.feature.replaceAll(" ", "") == "") return false;
 
-        console.log("shalom");
 
         setFeatures([inputs.feature, ...features,]);
         setInputs({...inputs, feature: ""});
@@ -81,8 +79,6 @@ export default function () {
     const checkInputs = () => {
         const values = Object.values(inputs);
         const keys   = Object.keys(inputs);
-
-        console.log(values);
 
         //prompt for empty inputs
         const empty_inputs = 

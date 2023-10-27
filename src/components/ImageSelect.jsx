@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 
 
 
-export default function ({ initImage, callback=()=>{}, containerClass=" h-[190px] w-[300px] ", imageClass="text-7xl", textClass="", text="Click To Add An Image", ...props}) {
+export default function ({ initImageUrl=null, initImage, callback=()=>{}, containerClass=" h-[190px] w-[300px] ", imageClass="text-7xl", textClass="", text="Click To Add An Image", ...props}) {
 
     const [ image, setImage ] = useState(null);
 
@@ -17,9 +17,9 @@ export default function ({ initImage, callback=()=>{}, containerClass=" h-[190px
         if(typeof(initImage) !== "undefined") {
             setImage(URL.createObjectURL(initImage));
         }
-        else setImage(null);
+        else setImage(initImageUrl);
 
-    }, [initImage])
+    }, [initImage, initImageUrl])
 
     return (
         <div className={`rounded border shadow text-gray-600 relative overflow-hidden group ${containerClass}`}>

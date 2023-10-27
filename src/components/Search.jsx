@@ -21,7 +21,7 @@ export const Search = ({searchingCallback = () => {}, searchCallback = () => {},
 
     const resetValues = () => {
         setSearchInput("");
-        searchingCallback("");
+        // searchingCallback("");
         resetCallback();
     }
 
@@ -53,6 +53,7 @@ export const Search = ({searchingCallback = () => {}, searchCallback = () => {},
 
                 <div data-aos="fade-in" className="absolute z-[20] top-[100%] shadow-xl bg-white left-0 w-full h-[250px] flex items-center justify-center">
                     <CircularProgress />
+                    <i onClick={resetValues} className="absolute -top-2 -right-2 bg-white h-[30px] w-[30px] flex items-center justify-center rounded-full shadow-xl hover:bg-red-500 hover:text-white z-10 bi bi-x"></i>
                 </div>
             }
         </div>

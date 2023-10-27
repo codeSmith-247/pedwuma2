@@ -1,9 +1,19 @@
 
 import { Link } from "react-router-dom";
 import { Btn, Cards } from "components";
+import { useData } from "functions/reads/General";
+import { useNavigate } from "react-router-dom";
 
 
 export default function () {
+
+    const { data } = useData({
+        target: "Category",
+        conditions: [],
+    });
+
+    const navigate = useNavigate();
+
     return (
         <section>
             <div className="flex items-center justify-between mb-3">
@@ -14,14 +24,21 @@ export default function () {
                 </Link>
             </div>
 
-            <div className="grid-box-fit gap-3" style={{"--width": '250px'}}>
-                {Array.from({length: 20}, (item, index) => 
+            <div className="grid-box-fill gap-3" style={{"--width": '250px'}}>
+                {!data && Array.from({length: 20}, (item, index) => 
+                    <Cards.Loading />
+                )}
+
+
+                {data && data[0].map( (item, index) => 
                     <Cards.Description
                         key={index}
-                        title={"Carpenter"}
-                        description={<div className="text-xs">Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi, 
-                        amet aperiam nostrum impedit nobis aut? Minima perferendis quidem cupiditate rerum!</div>}
-                        btnText="See Workers"
+
+                        image={item["Pic"]}
+                        title={item["Category Name"]}
+                        description={<div className="text-xs">{item["Desc"]}</div>}
+                        btnText="Edit"
+                        onBtnClick={() => { navigate(`/admin/category/${item.id}`)}}
                         className="h-[400px] max-[1165px]:w-[300px] max-[1165px]:h-[400px] border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative group"
                     />
                 )}

@@ -18,10 +18,13 @@ export const AdminLinks = [
         icon: 'box',
         link: '',
     },
+
+
+
     {
         name: 'Users',
         icon: 'people',
-        link: '',
+        link: '/admin/users',
     },
 
     {
@@ -66,24 +69,39 @@ export const WorkerLinks = [
     {
         name: 'Jobs',
         icon: 'box',
+        link: '/admin/jobs',
+    },
+
+    {
+        name: 'Settings',
+        icon: 'gear',
         link: '',
     },
+];
+
+export const RequesterLinks = [
     {
-        name: 'Users',
-        icon: 'people',
+        name: 'Dashboard',
+        icon: 'grid',
         link: '',
     },
 
     {
-        name: 'Categories',
-        icon: 'stack',
-        link: '',
+        name: 'Bookings',
+        icon: 'ticket',
+        link: '/admin/bookings',
     },
 
     {
-        name: 'Plans',
-        icon: 'coin',
-        link: '/admin/plans',
+        name: 'Jobs',
+        icon: 'box',
+        link: '/admin/jobs',
+    },
+
+    {
+        name: 'Applications',
+        icon: 'boxes',
+        link: '/admin/applications',
     },
 
     {

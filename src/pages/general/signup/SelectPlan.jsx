@@ -50,7 +50,6 @@ export default function ({callback = () => {}, prevCallback = () => {}, email}) 
     const handleClose = () => {
       // implementation for  whatever you want to do when the Paystack dialog closed.
       setPlan("free");
-      console.log('closed')
     }
 
 
@@ -63,8 +62,8 @@ export default function ({callback = () => {}, prevCallback = () => {}, email}) 
 
 
     const handelChoose = (initializePayment, item) => {
-        setPlan(item.id);
-        initializePayment( (reference) => {handleSuccess(reference, item.id)}, handleClose);
+        setPlan(item);
+        initializePayment( (reference) => {handleSuccess(reference, item)}, handleClose);
     }
 
     return (
@@ -116,12 +115,12 @@ export default function ({callback = () => {}, prevCallback = () => {}, email}) 
                         </div>
 
                         {item.Amount > 0 ? 
-                            <PaystackConsumer {...componentProps} onSuccess={ (reference) => handleSuccess(reference, item.id) } amount={item.Amount * 100} >
+                            <PaystackConsumer {...componentProps} onSuccess={ (reference) => handleSuccess(reference, item) } amount={item.Amount * 100} >
                                 {({initializePayment}) =><Btn.SmallBtn onClick={() => { handelChoose(initializePayment, item) }} fullWidth>Choose Plan</Btn.SmallBtn>}
                             </PaystackConsumer>
                             :
                             <Link to="/admin">
-                                <Btn.SmallBtn onClick={() => {callback(item.id, "free")}} fullWidth>Choose Plan</Btn.SmallBtn>
+                                <Btn.SmallBtn onClick={() => {callback(item, "free")}} fullWidth>Choose Plan</Btn.SmallBtn>
                             </Link>
                         }
 

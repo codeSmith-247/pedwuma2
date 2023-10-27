@@ -28,12 +28,12 @@ export default function ({ links = [] }) {
                 </div>
             </div>
 
-            <div className="content-area h-screen">
+            <div className="content-area h-screen relative">
                 <div className="h-[60px] w-full shadow-md px-5 flex items-center justify-between">
                     <i onClick={() => setMenu(!menu)} className={`bi bi-list text-2xl`}></i>
                 </div>
 
-                <div className="overflow-y-scroll p-5" style={{ height: 'calc(100vh - 60px)'}}>
+                <div className="overflow-y-scroll p-5 pb-12" style={{ height: 'calc(100vh - 60px)'}}>
                     <Outlet />
                 </div>
             </div>

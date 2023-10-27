@@ -33,7 +33,6 @@ export default function() {
 
 
     const { data, isLoading, isError } = useBookings();
-    console.log(data);
 
     // updateAllDocs("Handyman Jobs Applied", {"Start Date": serverTimestamp() });
     // updateAllDocs("Handyman Jobs Applied", {"End Date":   serverTimestamp() });
@@ -98,8 +97,8 @@ export default function() {
                             <TableCell>
                                 {row.Name}
                             </TableCell>
-                            <TableCell>{readableDate(row["Start Date"])}</TableCell>
-                            <TableCell>{getHumanReadableDateDifference(row["Start Date"], row["End Date"])}</TableCell>
+                            <TableCell>{readableDate(row["Upload Timestamp"])}</TableCell>
+                            <TableCell>{getHumanReadableDateDifference(row["Upload Timestamp"], row["Upload Timestamp"])}</TableCell>
                             <TableCell>Ghc{row["Charge"]} / {row["Charge Rate"]}</TableCell>
                             <TableCell>
                                 <Btn.SmallBtn>View Details</Btn.SmallBtn>

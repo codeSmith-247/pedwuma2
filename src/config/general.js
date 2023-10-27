@@ -5,6 +5,7 @@ const initialValue = {
   name: "",
   loggedIn: false,
   role: "",
+  plan: {},
 };
 
 const general = createSlice({
@@ -16,17 +17,18 @@ const general = createSlice({
       state.name = action.payload.name;
       state.loggedIn = true; // You likely want to set loggedIn to true
       state.role = action.payload.role;
+      state.plan = action.payload.plan;
     },
 
     logout: (state) => {
       // Update individual properties of the state to log out
       const auth = getAuth();
-      console.log(auth);
       signOut(auth);
 
       state.name = "";
       state.loggedIn = false; // Set loggedIn to false
       state.role = "";
+      state.plan = {};
     },
   },
 });

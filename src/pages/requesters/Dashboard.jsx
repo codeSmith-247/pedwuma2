@@ -50,7 +50,6 @@ export default function() {
 
 
     const { data, isLoading, isError } = useData({target: "Jobs"});
-    console.log(data);
 
     // updateAllDocs("Handyman Jobs Applied", {"Start Date": serverTimestamp() });
     // updateAllDocs("Handyman Jobs Applied", {"End Date":   serverTimestamp() });

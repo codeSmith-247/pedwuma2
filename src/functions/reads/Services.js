@@ -1,20 +1,35 @@
 
 import { useQuery } from "react-query";
-import { query, where, and, orderBy, startAt, endAt, getDocs } from "firebase/firestore"
+import { query, where, and, or, orderBy, startAt, endAt, getDocs } from "firebase/firestore"
 import refs from "../refs";
+import { safeGet } from "functions/utils/Fixers";
 
 export const useServiceSearch = (searchInput, state="active") => {
-    console.log(searchInput);
+
     return useQuery(["service search", searchInput, state ], async () => {
 
-        const queryBuild = query(refs.categories, where("Category Name", ">=", searchInput), where("Category Name", "<=", `${searchInput}\uf8ff`), orderBy("Category Name"));
 
-        const snapshot = await getDocs(queryBuild);
+        const snapshot = await getDocs(refs.categories);
 
-        const result = snapshot.docs.map( doc => { return { id: doc.id, ...doc.data() } });
+        let result = snapshot.docs.map( doc => { return { id: doc.id, ...doc.data() } });
 
-        console.log(result);
-    
+
+        result = result.filter(item => {
+            let match = false;
+
+            if(safeGet(item, ["Category Name"], "").toLowerCase().indexOf(searchInput.toLowerCase().slice(0, 6)) >= 0) return true;
+
+            for(let i = 0; i < safeGet(item, ["Services Provided"], []).length; i++) {
+
+                let sub = item["Services Provided"][i];
+                let check = sub.Title.toLowerCase().indexOf(searchInput.toLowerCase().slice(0, 6)) >= 0;
+                if(check) match = check;
+            }
+
+            return match;
+        });
+
+            
         return result;
 
     });
@@ -29,10 +44,31 @@ export const useServices = (state="active") => {
         const snapshot = await getDocs(refs.categories);
 
         const result = snapshot.docs.map( doc => { return { id: doc.id, ...doc.data() } });
-
-        console.log(result);
     
         return result;
 
     });
+}
+
+export const usePopularServices = () => {
+
+    return useQuery(["popular services"], async () => {
+
+        let services = [];
+
+        const snapshot = await getDocs(refs.categories);
+
+        const result = snapshot.docs.map( doc => { return { id: doc.id, ...doc.data() } });
+
+        
+        result.map( item => {
+            services = [...services, ...item["Services Provided"]];
+        })
+        
+        console.log(services);
+
+        return services;
+        
+    });
+
 }

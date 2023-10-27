@@ -8,6 +8,8 @@ import { errorAlert } from "functions/utils/Alert";
 import { checkInputsOnObj, checkObjInArray } from "functions/utils/Fixers";
 import { newCategory } from "functions/creates/Categories";
 import { TextField, MenuItem, FormControl, Select } from '@mui/material'
+import { categoryExists } from "functions/reads/Categories";
+
 
 
 export default function () {
@@ -24,6 +26,26 @@ export default function () {
 
     const queryClient = new QueryClient();
 
+
+
+    const empty_inputs = 
+            () => errorAlert({
+                title: 'Empty Inputs',
+                text: 'Please check all inputs and try again'
+            });
+
+    const empty_image = 
+            () => errorAlert({
+                title: 'No Image',
+                text: 'Please upload an image and try again'
+            });
+
+    const empty_exists = 
+            () => errorAlert({
+                title: 'Plan Exists',
+                text: `A plan with the name ${inputs.category} already exists, please use a different name and try again.`,
+            });
+
     const handleSubmit = () => {
 
         setLoad(true);
@@ -38,18 +60,15 @@ export default function () {
             if(result == "success") {
                 errorAlert({
                     icon: 'success',
-                    title: 'Plan Created Successfully'
+                    title: 'Category Created Successfully'
                 });
                 
                 queryClient.invalidateQueries();
                 
-                navigate('/admin/plans');
+                navigate('/admin/categories');
             }
             else if (result == "exists") {
-                errorAlert({
-                    title: 'Plan Exists',
-                    text: `A plan with the name ${inputs.name} already exists, please use a different name and try again.`,
-                });
+                empty_exists();
             }
 
             else {
@@ -64,19 +83,6 @@ export default function () {
 
     }
 
-    //prompt for empty inputs
-    const empty_inputs = 
-            () => errorAlert({
-                title: 'Empty Inputs',
-                text: 'Please check all inputs and try again'
-            });
-    //prompt for no image upload
-    const empty_image = 
-            () => errorAlert({
-                title: 'No Image',
-                text: 'Please upload an image and try again'
-            });
-
     const checkCategoryInputs = () => {
 
         if(!checkInputsOnObj(inputs, ["category", "description"])) {
@@ -90,6 +96,27 @@ export default function () {
         }
 
         return true;
+    }
+    
+    const checkExists = () => {
+
+        setLoad(true);
+
+        if(!checkCategoryInputs()) {
+            setLoad(false);
+            return false;
+        }
+
+        categoryExists(inputs.category).then( result => {
+
+            if(result) {
+                empty_exists();
+            }
+            else setInDisplay("services");
+
+            setLoad(false);
+
+        });
     }
 
     const checkInputs = () => {
@@ -189,7 +216,7 @@ export default function () {
                             </div>
 
                             <div className=" flex items-center justify-end">
-                                <Btn.SmallBtn onClick={() => checkCategoryInputs() ? setInDisplay("services") : ""}>Next</Btn.SmallBtn>
+                                <Btn.SmallBtn onClick={checkExists}>Next</Btn.SmallBtn>
                             </div>
                         </div>
                     </div>

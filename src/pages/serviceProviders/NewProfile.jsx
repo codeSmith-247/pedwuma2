@@ -1,269 +1,288 @@
-import { useState, useRef }     from "react";
-import { useNavigate }          from "react-router-dom";
-import { QueryClient }          from "react-query";
-import { Btn, Loading }         from "components";
-import { Input }                from "components/Input";
+import { useState, useRef }    from "react";
+import { useNavigate      }    from "react-router-dom"
+import { QueryClient      }    from "react-query";
+
+import { safeGet, isValidURL, checkInputsOnObj }     from "functions/utils/Fixers";
 import { errorAlert }           from "functions/utils/Alert";
 import { newProfile }           from "functions/creates/Users";
-import { useServices }          from "functions/reads/Services";
+import { profileForService }    from "functions/reads/Users";
+
+import { Btn, ServiceSelect, CategorySelect, FileUpload, ImageSelect, Loading } from "components";
+import { Input, ListInput }      from "components/Input";
+
 import { InputLabel, MenuItem, FormControl, Select, InputAdornment } from '@mui/material'
-import { MultiSelect }          from "react-multi-select-component";
-import { getAuth }              from "firebase/auth";
+
+import { useSelector } from "react-redux";
+
+import { getAuth } from "firebase/auth";
+
 
 
 export default function () {
 
-    const [ features, setFeatures ] = useState([]);
+    const role = useSelector((state) => state.general);
 
-    const [ inputs, setInputs ]     = useState({
-        charge_rate: "Job",
-        experience: "Expert (6+ years)",
+    const [ inDisplay, setInDisplay ] = useState("category");
+    const [ inputs, setInputs ] = useState({
+        chargeRate: "Per Job",
+        expertise: "Intermidiate (2+ Years)",
     });
-
-    const [ load, setLoad ]         = useState(false);
-
-    const [ options, setOptions ] = useState([]);
-
     const [ services, setServices ] = useState([]);
+    const [ reference, setReference ] = useState([]);
 
-    const [ service, setService ] = useState([]);
+    const [ load, setLoad ] = useState(false);
 
-    const user = getAuth().currentUser;
-
-    const [ image, setImage ] = useState(user.photoURL ? user.photoURL : `/images/pedwuma.jpg`);
+    const user = getAuth();
 
     const navigate = useNavigate();
 
     const queryClient = new QueryClient();
 
-    const { data, isLoading, isError } = useServices();
+    const selectCategory = (category) =>  {
 
-    
-    const inputRef = useRef();
+        setInputs({...inputs, category: category["Category Name"]});
 
-    console.log(data);
+        setInDisplay("service");
 
-    const handleSelected = (value) => {
+        setServices(category["Services Provided"]);
+    }
 
-        if(value.length > 0) {
+    const selectService = (service) => {
 
-            console.log(value);
-            setService([value[0]]);
-    
-            setOptions( value[0]['value']['Service Provided'].map( (item, index) => { return {label: item.Name, value: index} }));
+        profileForService(service.Title).then( result => {
+
+            if(result.length > 0) {
+                errorAlert({
+                    title: "Profile Exists",
+                    text: `Booking Profile for service "${service.Title}" already exists`
+                });
+                return false;
+            }
+
+            setInputs({...inputs, service: service["Title"]});
+            setInDisplay("experience");
+        })
+    }
+
+    const handleFileTarget = (target) => {
+        setInputs({...inputs, fileTarget: target});
+    }
+
+    const checkFile = (files) => {
+        if(files.length > role.plan.Portfolios || safeGet(inputs, [inputs.fileTarget], []).length >= role.plan.Portfolios) {
+            errorAlert({
+                title: "Portfolio Limit Reached",
+                text: `You have exceeded the maximum portfolio upload (${role.plan.Portfolios}) for your plan (${role.plan.Name} Plan), please upgrade your plan to upload more portfolios`,
+            })
+            
+            return false;
         }
-        else {
-            setService(value);
-            setOptions([]);
-            setServices([]);
+
+        return true;
+    }
+    
+    const handleFileUpload = (files) => {  
+
+        let newFileTarget = {};
+
+        newFileTarget[inputs.fileTarget] = [...files];
+
+        //just checking if say the state inputs has previous files for the file-target "experience"
+        if(inputs[inputs.fileTarget]) newFileTarget[inputs.fileTarget] = [...inputs[inputs.fileTarget], ...files];
+
+
+        setInputs({...inputs, ...newFileTarget})
+    }
+
+    const handleReference = (reference) => {
+        setReference([...reference]);
+    }
+
+    const refferenceCheck = (item) => {
+
+        if(!isValidURL(item)) {
+            errorAlert({
+                title: "Invalid Link",
+                text: "Please provide a valid link and try again"
+            });
+
+            return false;
         }
+
+        return true;
     }
 
     const handleSubmit = () => {
 
         setLoad(true);
 
-        if(!checkInputs()) {
+        const profile = { ...inputs, ...reference, rating: role.plan["Default Rating"]};
+
+        if(!checkInputsOnObj(profile, ["category", "service", "chargeRate", "amount", "expertise"])) {
+            errorAlert({
+                title: "Empty Inputs",
+                text: "Please check your inputs and try again"
+            });
+
             setLoad(false);
-            return false;
-        } 
+        }
 
-        newProfile({...inputs, service_category: value[0]['value']['Category Name'], services: services.map( item => item.label )}).then( result => {
-
-            if(result == "success") {
+        newProfile(profile).then( result => {
+            if(result) {
                 errorAlert({
-                    icon: 'success',
-                    title: 'Plan Created Successfully'
+                    icon: "success",
+                    title: "Booking Profile Created Successfully"
                 });
-                
+
                 queryClient.invalidateQueries();
-                
-                navigate('/admin/plans');
-            }
-            else if (result == "exists") {
-                errorAlert({
-                    title: 'Plan Exists',
-                    text: `A plan with the name ${inputs.name} already exists, please use a different name and try again.`,
-                });
+
+                navigate("/admin/profiles");
+                return false;
             }
 
-            else {
-                errorAlert({
-                    title: 'System Busy',
-                    text: 'Please try again later'
-                });
-            }
+            errorAlert({
+                title: "System Busy",
+                text: "system is currently unable to create this profile, please try again later"
+            });
 
             setLoad(false);
         });
 
     }
 
-    const checkInputs = () => {
-        const values = Object.values(inputs);
-
-        console.log(values);
-
-        //prompt for empty inputs
-        const empty_inputs = 
-            () => errorAlert({
-                title: 'Empty Inputs',
-                text: 'Please check all inputs and try again'
-            });
-
-
-        if(values.length < 3 || inputs.charge_rate.replaceAll(" ", "") == "" || inputs.amount.replaceAll(" ", "") == "") {
-            empty_inputs();
-            return false;
-        }
-        
-
-        if (services.length <= 0) {
-            errorAlert({
-                title: 'No Service Selected',
-                text: 'Please select a service and try again'
-            });
-
-            return false;
-        }
-
-
-        return true;
-    }
-
-    const handleImage = (e) => {
-        setImage(URL.createObjectURL(e.target.files[0]));
-    }
+    
 
     return (
         <div>
+
             <Loading load={load} />
-            
-            <Btn.SmallBtn onClick={() => navigate(-1)} >Back</Btn.SmallBtn>
 
-            <div className="mx-auto max-w-[500px]">
-                <div className="flex items-center justify-between">
+            {inDisplay == "category" && 
+                <CategorySelect back={() => navigate(-1)} selectCategory={selectCategory} />
+            }
 
-                    <h1 className="orb text-xl mb-3">New Profile</h1>
+            {inDisplay == "service" && 
+                <ServiceSelect back={() => setInDisplay("category")} services={services} service={inputs?.service} selectService={selectService} />
+            }
 
 
-                </div>
-                <div className="w-full bg-white rounded shadow-lg p-5">
+            {inDisplay == "experience" && 
 
-                    <div className="mx-auto h-[200px] w-[200px] rounded-full shadow p-1 relative">
-                        <img src={image} className="object-cover h-full w-full rounded-full shadow" />
-                        <div onClick={() => inputRef.current.click()} className="absolute top-0 left-0 bg-black bg-opacity-50 h-full w-full rounded-full flex items-center justify-center text-center text-white">
-                            Click to Upload Profile Image
-                            <input onChange={handleImage} ref={inputRef} type="file" name="image" accept="image/*" className="h-0 w-0 p-0 m-0 overflow-hidden opacity-0" />
-                        </div>
-                    </div>
-
-                    <div className="mb-3 bg-white relative z-20">
-                        <label className="text-xs">Choose a service category</label>
-                        <MultiSelect
-                            options={typeof(data) == "undefined" ? [] : data.map(item => { return {label: item["Category Name"], value: item} })}
-                            value={service}
-                            onChange={handleSelected}
-                            isLoading={isLoading || isError || typeof(data) == "undefined" || (typeof(data) != "undefined" && data.length <= 0)}
-                            labelledBy="Select"
-                        />
-
-                    </div>
-
-                    <div className="mb-6 bg-white relative z-10">
-                        <label className="text-xs">What services can you render?</label>
-                        <MultiSelect
-                            options={options}
-                            value={services}
-                            onChange={setServices}
-                            labelledBy="Select"
-                        />
-
-                    </div>
-
-                    <FormControl fullWidth sx={{marginBottom: "1.5rem"}}>
-                        <InputLabel id="demo-simple-select-label">How do you charge?</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={typeof(inputs.charge_rate) == "undefined" ? "Job" : inputs.charge_rate}
-                            onChange={(e) => setInputs({...inputs, charge_rate: e.target.value})}
-                            label="How do you charge?"
-                            startAdornment={<InputAdornment position="start">I Charge</InputAdornment>}
-                            size="small"
-                            // onChange={handleChange}
-                        >
-                            <MenuItem value={"Job"}>Per Job</MenuItem>
-                            <MenuItem value={"Day"}>Per Day</MenuItem>
-                            <MenuItem value={"Hour"}>Per Hour</MenuItem>
-                            <MenuItem value={"6 Hours"}>Every 6 hours</MenuItem>
-                            <MenuItem value={"12 Hours"}>Every 12 hours</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    <Input 
-                        name="amount"
-                        placeholder="e.g 300"
-                        label="How much do you charge"
-                        type="number"
-                        size="small"
-                        onChange={(e) => setInputs({...inputs, amount: e.target.value})}
-                        startAdornment={<InputAdornment position="start">Ghc</InputAdornment>}
-
+                <div>
+                    <FileUpload 
+                        back={() => setInDisplay("service")} 
+                        title="Experience"
+                        description="Do you have pictures or documents that shows your experience delivering this service, it can be pictures of you at work or pictures/documents of the works you have done, if not click next to continue"
+                        btnOnClick={() => handleFileTarget("experience")}
+                        callback={handleFileUpload}
+                        checkFile={checkFile}
+                        btnText="Click Me To Upload"
+                        prevFiles={inputs?.experience}
                     />
-
-                    <FormControl fullWidth sx={{marginBottom: "1.5rem"}}>
-                        <InputLabel id="demo-simple-select-label">Level of Experience</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={typeof(inputs.experience) == "undefined" ? "Expert (6+ years)" : inputs.experience}
-                            onChange={(e) => setInputs({...inputs, experience: e.target.value})}
-
-                            label="Level of Experience"
-                            startAdornment={<InputAdornment position="start"></InputAdornment>}
-                            size="small"
-                            // onChange={handleChange}
-                        >
-                            <MenuItem value={"Expert (6+ years)"}>Expert (6+ years)</MenuItem>
-                            <MenuItem value={"Professional (3+ years)"}>Professional (3+ years)</MenuItem>
-                            <MenuItem value={"Beginner(6 months - 1+ year)"}>Beginner(6 months - 1+ year)</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    <Input 
-                        name="experience"
-                        placeholder=""
-                        label="images / files of works you have done"
-                        type="file"
-                        size="small"
-                        onChange={(e) => setInputs({...inputs, experiences: e.target.files})}
-                    />
-
 
                     
-                    <Input 
-                        name="certifications"
-                        placeholder=""
-                        label="images / files of certificates you have"
-                        type="file"
-                        size="small"
-                        onChange={(e) => setInputs({...inputs, certifications: e.target.files})}
-                    />
-
-                    <Input 
-                        name="references"
-                        placeholder=""
-                        label="images / files of references you have"
-                        type="file"
-                        size="small"
-                        onChange={(e) => setInputs({...inputs, references: e.target.files})}
-                    />
-
-
-                    <Btn.SmallBtn onClick={handleSubmit} fullWidth>Create Profile</Btn.SmallBtn>
+                    <div className=" flex justify-end items-center gap-1 absolute bottom-0 left-0 w-full bg-white p-2">
+                            <Btn.SmallBtn onClick={() => {setInDisplay("certificate")}}>Next</Btn.SmallBtn>
+                    </div>
+                    
                 </div>
-            </div>
+            }
+
+            {inDisplay == "certificate" && 
+                <div>
+                    <FileUpload 
+                        back={() => setInDisplay("experience")} 
+                        title="Certificates"
+                        description="Please click the button bellow to upload any certificates you have to render this service"
+                        btnOnClick={() => handleFileTarget("certificate")}
+                        callback={handleFileUpload}
+                        checkFile={checkFile}
+                        btnText="Click Me To Upload"
+                        prevFiles={inputs?.certificate}
+                    />
+
+                    
+                    <div className=" flex justify-end items-center gap-1 absolute bottom-0 left-0 w-full bg-white p-2">
+                            <Btn.SmallBtn onClick={() => {setInDisplay("info")}}>Next</Btn.SmallBtn>
+                    </div>
+                    
+                </div>
+            }
+
+            {inDisplay == "info" && 
+                <div>
+                    <i onClick={() => setInDisplay("certificate")} className="bi bi-chevron-left bg-blue-500 text-white h-[30px] w-[30px] rounded-md flex items-center justify-center"></i>
+
+                    <h1 className="orb text-3xl text-center font-medium mx-auto my-6">Booking Information</h1>
+                    
+                    <div className="mx-auto max-w-[500px]">
+
+                        <div className="w-full bg-white rounded shadow-lg p-5">
+                            <ImageSelect initImageUrl={user.currentUser.photoURL} initImage={inputs.pic} callback={(file) => setInputs({...inputs, pic: file})} containerClass="h-[190px] w-[190px] rounded-full mx-auto mb-6" />
+                            <FormControl fullWidth sx={{marginBottom: "1.5rem"}}>
+                                <InputLabel id="demo-simple-select-label">How do you charge?</InputLabel>
+                                <Select
+                                    labelId="demo-simple-select-label"
+                                    id="demo-simple-select"
+                                    value={inputs.chargeRate}
+                                    label="How do you charge?"
+                                    startAdornment={<InputAdornment position="start">I Charge</InputAdornment>}
+                                    onChange={(e) => setInputs({...inputs, chargeRate: e.target.value})}
+                                    size="small"
+                                >
+                                    <MenuItem value={"Per Job"}>Per Job</MenuItem>
+                                    <MenuItem value={"Per Month"}>Per Month</MenuItem>
+                                    <MenuItem value={"Per Day"}>Per Day</MenuItem>
+                                    <MenuItem value={"Per Hour"}>Per Hour</MenuItem>
+                                    <MenuItem value={"Every 6 hours"}>Every 6 hours</MenuItem>
+                                    <MenuItem value={"Every 12 hours"}>Every 12 hours</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            <Input 
+                                name="amount"
+                                placeholder="E.g 300"
+                                label="How much do you charge?"
+                                startAdornment={<InputAdornment position="start">Ghc</InputAdornment>}
+                                type="number"
+                                size="small"
+                                onChange={(e) => setInputs({...inputs, amount: e.target.value})}
+                            />
+
+                            <FormControl fullWidth sx={{marginBottom: "1.5rem"}}>
+                                <InputLabel id="demo-simple-select-label">What is your level of Experience?</InputLabel>
+                                <Select
+                                    labelId="demo-simple-select-label"
+                                    id="demo-simple-select"
+                                    value={inputs.expertise}
+                                    label="What is your level of Experience?"
+                                    startAdornment={<InputAdornment position="start"></InputAdornment>}
+                                    onChange={(e) => setInputs({...inputs, expertise: e.target.value})}
+                                    size="small"
+                                >
+                                    <MenuItem value={"Beginner (6+ Months)"}>Beginner (6+ Months)</MenuItem>
+                                    <MenuItem value={"Intermidiate (2+ Years)"}>Intermidiate (2+ Years)</MenuItem>
+                                    <MenuItem value={"Professional (4+ Years)"}>Professional (4+ Years)</MenuItem>
+                                    <MenuItem value={"Expert (6+ Years)"}>Expert (6+ Years)</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            <div className="w-full">
+
+                                <div className="text-xs leading-tight mb-6 text-gray-700">Please provide any reference link you have for this service, (providing the links is not compulsary).</div>
+
+                                <ListInput checkInsert={refferenceCheck} callback={handleReference} />
+                            </div>
+
+                            
+
+                            <Btn.SmallBtn onClick={handleSubmit} fullWidth>Create Profile</Btn.SmallBtn>
+                        </div>
+                    </div>
+                </div>
+            }
+
+
         </div>
     );
 }

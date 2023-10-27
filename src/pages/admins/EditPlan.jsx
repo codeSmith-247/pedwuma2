@@ -1,13 +1,15 @@
 import { useState, useEffect }     from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { QueryClient } from "react-query";
-import { Btn, Loading   }        from "components";
-import { Input }        from "components/Input";
+import { useNavigate, useParams }  from "react-router-dom";
+import { QueryClient }             from "react-query";
 
-import { errorAlert } from "functions/utils/Alert";
-import { editPlan } from "functions/edits/Plans";
-import { deletePlan } from "functions/deletes/Plans";
-import { getPlan } from "functions/reads/Plans";
+import { Btn, Loading   }          from "components";
+import { Input }                   from "components/Input";
+
+import { errorAlert }   from "functions/utils/Alert";
+import { editPlan }     from "functions/edits/Plans";
+import { deleteById }   from "functions/deletes/General";
+import { getPlan }      from "functions/reads/Plans";
+
 import { InputLabel, MenuItem, FormControl, Select } from '@mui/material'
 
 
@@ -40,8 +42,6 @@ export default function () {
                 return false;
             }
 
-            console.log(result["Default Rating"]);
-
             setInputs({
                 name: result.Name,
                 amount: result.Amount,
@@ -62,11 +62,7 @@ export default function () {
 
     const handleFeature = () => {
 
-        console.log(features);
-
         if(features.indexOf(inputs.feature) >= 0 || inputs.feature.replaceAll(" ", "") == "") return false;
-
-        console.log("shalom");
 
         setFeatures([inputs.feature, ...features,]);
         setInputs({...inputs, feature: ""});
@@ -111,8 +107,6 @@ export default function () {
         const values = Object.values(inputs);
         const keys   = Object.keys(inputs);
 
-        console.log(values);
-
         //prompt for empty inputs
         const empty_inputs = 
             () => errorAlert({
@@ -147,8 +141,9 @@ export default function () {
     }
 
     const handleDelete = () => {
+
         
-        deletePlan(id, setLoad).then( result => {
+        deleteById("Plans", id, setLoad).then( result => {
             queryClient.invalidateQueries();
             if(result) navigate('/admin/plans');
         });
@@ -278,7 +273,6 @@ export default function () {
                     <div className="flex items-center gap-2">
                         <Btn.SmallBtn onClick={handleSubmit} styles={{wi40dth: "calc(100% - 35px)"}} fullWidth>Update Plan</Btn.SmallBtn>
                         <i onClick={handleDelete} className="bi bi-trash text-lg bg-red-500 hover:bg-red-600 active:bg-red-700 w-[35px] h-[35px] rounded-md flex items-center justify-center text-white" />    
-                        
                     </div>
                 </div>
             </div>

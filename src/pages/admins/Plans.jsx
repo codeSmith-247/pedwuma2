@@ -43,8 +43,6 @@ export default function() {
 
     const { data, isLoading, isError } = useData({target: "Plans"});
 
-    console.log(data);
-
 
     return (
         <section>

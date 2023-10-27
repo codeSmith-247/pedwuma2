@@ -1,15 +1,17 @@
 
 import { Skeleton } from "@mui/material";
 import { Btn, EmptyBox, Cards } from "components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useBookingProfiles } from "functions/reads/Bookings";
+
+import { encrypt } from "functions/utils/Fixers";
 
 export default function () {
 
     const { data, isLoading, isError } = useBookingProfiles();
 
-    console.log(data);
+    const navigate = useNavigate();
 
     return (
         <div>
@@ -20,13 +22,13 @@ export default function () {
                 </Link>
             </div>
 
-            <div className="profiles flex grid-box-fit gap-3" style={{"--width": "250px"}}>
+            <div className="profiles flex grid-box-fill gap-3" style={{"--width": "250px"}}>
                 {(isLoading || isError ) && Array.from({length: 15}, (item, index) => 
                     <Cards.Profile key={index} item={item} loading={true} />
                 )}
                 
                 { data && data[0].map( (item, index) => 
-                    <Cards.Profile key={index} item={item} />
+                    <Cards.Profile onBtnClick={(() => navigate(`/admin/profile/edit/${encrypt(item.id)}`))} key={index} item={item}  />
                 )}
 
             </div>

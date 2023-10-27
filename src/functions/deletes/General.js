@@ -6,7 +6,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { errorAlert, deleteAlert }  from "functions/utils/Alert";
 
 
-export const deletePlan = async (id, load) => {
+export const deleteById = async (target, id, load) => {
 
     const confirmDelete = await deleteAlert();
 
@@ -14,7 +14,7 @@ export const deletePlan = async (id, load) => {
 
     load(true);
 
-    const docRef = doc(db, "Plans", id);
+    const docRef = doc(db, target, id);
 
     await deleteDoc(docRef);
 

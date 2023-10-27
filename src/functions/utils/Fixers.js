@@ -1,6 +1,6 @@
 
 import { Timestamp } from 'firebase/firestore'; // Import the Timestamp class from Firebase
-
+import CryptoJS from 'crypto-js';
 
 export const paddNumber = (number) => {
     if(!number) return '0000';
@@ -49,8 +49,8 @@ export const getHumanReadableDateDifference = (timestamp1, timestamp2) => {
     const oneMonthInMilliseconds = 30.44 * oneDayInMilliseconds; // Average month length
   
     // Convert Firebase Timestamp objects to JavaScript Date objects
-    const date1 = timestamp1.toDate();
-    const date2 = timestamp2.toDate();
+    const date1 = timestamp1?.toDate();
+    const date2 = timestamp2?.toDate();
   
     // Calculate the time difference in milliseconds
     const timeDifference = date1 - date2;
@@ -91,7 +91,7 @@ export const getHumanReadableDateDifference = (timestamp1, timestamp2) => {
 
 export const readableDate = (timestamp) => {
     // Convert Firestore Timestamp to JavaScript Date
-    const date = timestamp.toDate();
+    const date = timestamp?.toDate();
   
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const months = [
@@ -99,11 +99,11 @@ export const readableDate = (timestamp) => {
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
   
-    const dayOfMonth = date.getDate();
-    const month = months[date.getMonth()];
-    const dayOfWeek = daysOfWeek[date.getDay()];
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
+    const dayOfMonth = date?.getDate();
+    const month = months[date?.getMonth()];
+    const dayOfWeek = daysOfWeek[date?.getDay()];
+    const hours = date?.getHours();
+    const minutes = date?.getMinutes();
     const amPm = hours >= 12 ? "pm" : "am";
   
     // Convert to 12-hour time format
@@ -136,11 +136,16 @@ export const extractNames = (fullName) => {
 }
 
 
-export const safeGet = (obj, properties) => {
+export const safeGet = (obj, properties, alternateValue = false) => {
 
   if(typeof(properties) !== "object") properties = [properties];
 
-  return properties.reduce((subObj, prop) => (subObj && subObj[prop]) ? subObj[prop] : false , obj);
+  let result = properties.reduce((subObj, prop) => (subObj && subObj[prop]) ? subObj[prop] : false , obj);
+
+  if(result == false) return alternateValue;
+
+  return result;
+
 }
 
 
@@ -190,9 +195,28 @@ export const checkObjInArray = (arr, properties, value) => {
 }
 
 
-export const getExtension = (blob) => {
-  const mimeType = blob.type;
-  const extension = mimeType.split('/').pop();
+export const isValidURL = (url) => {
+  try {
+    // Create a new URL object and check if it's a valid URL
+    new URL(url);
+    return true;
 
-  return extension;
+  } catch (error) {
+
+    return false;
+    
+  }
+}
+
+const secretKey = '@mysecrete@key@200';
+
+export function encrypt(token) {
+    const encryptedToken = CryptoJS.AES.encrypt(token, secretKey).toString().replaceAll('+','xNkt').replaceAll('/','p51Rd').replaceAll('=','Mfm6');
+    return encryptedToken;
+}
+
+export function decrypt(encryptedToken) {
+    const decryptedBytes = CryptoJS.AES.decrypt(encryptedToken.replaceAll('xNkt', '+').replaceAll('p51Rd', '/').replaceAll('Mfm6', '='), secretKey);
+    const decryptedToken = decryptedBytes.toString(CryptoJS.enc.Utf8);
+    return decryptedToken;
 }

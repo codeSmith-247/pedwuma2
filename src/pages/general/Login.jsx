@@ -26,13 +26,13 @@ export default function() {
         }
 
         logIn(inputs.email, inputs.password).then( result => {
-            console.log(result);
             if(result) {
         
                 dispatch(login({
                     name: result["First Name"] + result["Last Name"],
                     loggedIn: true,
                     role: result["Role"],
+                    plan: result.plan,
                 }));
                 navigate("/admin");
             }

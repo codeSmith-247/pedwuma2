@@ -40,13 +40,11 @@ export const newPlan = async (inputs) => {
 
 export const confirmPayment = async (reference) => {
 
-    let result = await fetch(`https://localhost/pedwuma2/scripts/verifypayment.php?reference=${reference}`);
+    let result = await fetch(`https://pedwuma.com/backend/uploads/check.php?reference=${reference}`);
 
     
     result = await result.json();
     
-    console.log(result);
-
     if(result.status && result.data.status == "success") return true;
     
     return false;
