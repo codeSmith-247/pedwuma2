@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { SmallBtn } from "./Buttons";
 
 import { Link, useNavigate } from "react-router-dom";
+import { InputLabel, MenuItem, FormControl, Select } from '@mui/material'
 
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../config/general";
+import { logout, setLang } from "../config/general";
 
 export default function () {
     const [ menu, setMenu ] = useState(false);
@@ -44,13 +45,37 @@ export default function () {
 
     return (
         <div className="">
-            <div className="relative z-20">
-                <nav className="bg-black text-white px-10 py-3 max-[475px]:px-5 flex items-center justify-between relative z-20">
-                    <div className="logo flex items-center gap-2">
-                        <div className="image h-[40px] w-[40px] rounded-full overflow-hidden bg-blue-800">
+            <div className="relative z-40">
+                <nav className="bg-black text-white px-10 py-3 max-[475px]:px-5 flex items-center justify-between relative z-50">
+                    <div  className="logo flex items-center gap-2">
+                        <div onClick={() => navigate("/")} className="image h-[40px] w-[40px] rounded-full overflow-hidden bg-blue-800">
                             <img src="/images/logo.png" className="object-cover h-full w-full" />
                         </div>
-                        <div className="uppercase orb font-black max-[340px]:hidden">pedwuma</div>
+                        <div onClick={() => navigate("/")} className="uppercase orb font-black max-[550px]:hidden">pedwuma</div>
+
+                        <div style={{
+                                    background: "#111",
+                                    padding: ".5rem",
+                                    borderRadius: "1rem",
+                                    color: "white",
+                                    scale: "0.85",
+                                    "border": "1px solid white",
+                                    "display": "flex",
+                                    "alignItems": "center",
+                                }}>
+                            <i className="bi bi-globe-europe-africa mr-0.5"></i>
+                            <select
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                                defaultValue={general.lang}
+                                onChange={(e) => {dispatch(setLang(e.target.value))}}
+                                className="select bg-[#111]"
+                                size="small"
+                            >
+                                <option value={"english"}>English</option>
+                                <option value={"french"}>French</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="flex items-center">
@@ -72,11 +97,24 @@ export default function () {
                     </div>
                 </nav>
 
-                <div className={`mobile-menu ${ menu ? 'top-12 mt-4' : '-top-[200vh]'} shadow-lg left-0 w-full bg-white absolute z-10 `}>
-                    <div className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Our Workers</div>
-                    <div className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Our Jobs</div>
-                    <div className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Service Categories</div>
-                    <div className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Log In</div>
+                <div className={`mobile-menu ${ menu ? 'top-12 mt-4' : '-top-[200vh]'} shadow-lg left-0 w-full bg-white absolute z-40 `}>
+                    <div onClick={() => navigate("/")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Home</div>
+                    <div onClick={() => navigate("/workers")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Our Workers</div>
+                    <div onClick={() => navigate("/jobs")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Our Jobs</div>
+                    <div onClick={() => navigate("/services")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Services</div>
+                    {!general?.loggedIn && 
+                        <>
+                            <div onClick={() => navigate("/login")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Log In</div>
+                            <div onClick={() => navigate("/signup")} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Sign Up</div>
+                        </>
+                    }
+
+                    {general?.loggedIn && 
+                        <>
+                            <div onClick={(e) => {e.stopPropagation(); dispatch(logout())}} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Log Out</div>
+                            <div onClick={() => navigate(`/${navLinks[navLinks.length - 1]['link']}`)} className="text-2xl hover:tracking-wide hover:bg-gray-200 py-5 px-10 max-[475px]:p-5">Dashboard</div>
+                        </>
+                    }
                 </div>
             </div>
 

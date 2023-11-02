@@ -1,21 +1,33 @@
-
+import { useState } from "react";
+import { QueryClient } from "react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { getData, useData } from "functions/reads/General";
 import { decrypt, safeGet, readableDate } from "functions/utils/Fixers";
+import { errorAlert } from "functions/utils/Alert";
+import { setApplicationState } from "functions/edits/Jobs"
 import { and, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-import { MapShow, Btn } from "components";
+import { MapShow, Btn, Loading } from "components";
+
+import { useDispatch } from "react-redux";
+import { toggleChat, setChatFocus, setRecipient } from "../../config/general";
 
 export default function () {
+
+    const [ load, setLoad ] = useState(false);
+
+    const dispatch = useDispatch();
 
     const user = getAuth();
 
     const navigate = useNavigate();
 
+    const queryClient = new QueryClient();
+
     const { id } = useParams();
 
-    const { data } = useData({
+    const { data, refetch } = useData({
         target: "Applications",
         conditions: [ and(
                         where("Applier ID", "==", user.currentUser.uid),
@@ -42,14 +54,37 @@ export default function () {
         }
     });
 
-    console.clear();
+    // console.clear();y
     console.log(data, decrypt(id));
 
     const status = safeGet(data, ["0", "0", "Job Status"], "Pending");
 
+    const handleCompleted = () => {
+        setLoad(true);
+        setApplicationState(decrypt(id), "Completed", safeGet(data, ["0", "0", "Job ID"], "")).then( result => {
+            if(result) {
+                errorAlert({
+                    icon: "success",
+                    title: "Job Completed Successfully"
+                });
+
+                refetch();
+                queryClient.invalidateQueries();
+            }
+            else {
+                errorAlert({
+                    title: "System Busy",
+                    text: "system is currently unable to complete this job, please try again later"
+                });
+            }
+
+            setLoad(false);
+        })
+    }
 
     return (
         <div>
+            <Loading load={load} />
 
             <div className="flex items-center gap-1">
                 <i onClick={() => navigate(-1)} className="bi bi-chevron-left bg-blue-500 text-white h-[30px] w-[30px] rounded-md flex items-center justify-center"></i>
@@ -91,25 +126,76 @@ export default function () {
 
                     <div className="my-1 flex gap-2 items-center font-semibold text-gray-600">
                         <span>Status:</span>
-                        <span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{safeGet(data, ["0", "0", "Booking Status"], "Pending")}</span>
+                        <span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : status == "Completed" ? "bg-cyan-800" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{safeGet(data, ["0", "0", "Job Status"], "Pending")}</span>
                     </div>
 
                     <div className="my-1 flex gap-2 items-center font-semibold text-gray-600">
                         <span>Location:</span>
                         <span className={``}>{safeGet(data, ["0", "0", "jobDetails", "Address"], "")}</span>
                     </div>
+
+                    {safeGet(data, ["0", "0", "Note"], "").length > 0 && 
+                        <div className="my-2 font-semibold text-gray-600">
+                            <div>Application Note:</div>
+                            <p className={`font-normal`}>{safeGet(data, ["0", "0", "Note"], "")}</p>
+                        </div>
+                    }
+
+                    <div className="flex flex-wrap gap-2">
+                        {safeGet(data, ["0", "0", "Portfolio"], "").length > 0 && 
+                            <div className="my-2 font-semibold text-gray-600">
+                                <a target="_blank" href={safeGet(data, ["0", "0", "Portfolio"], ["https://pedwuma.com"])[0]} className={``}><Btn.SmallBtn >Application Document</Btn.SmallBtn></a>
+                            </div>
+                        }
+
+                        {safeGet(data, ["0", "0", "Reference Links"], "").length > 0 && 
+                            <div className="my-2 flex flex-wrap gap-1 items-center font-semibold text-gray-600">
+                                <a target="_blank" href={safeGet(data, ["0", "0", "Reference Links"], ["https://pedwuma.com"])[0]} className={``}>
+                                    <Btn.SmallBtn >Application Reference</Btn.SmallBtn>
+                                </a>
+                            </div>
+                        }
+                    </div>
                 </div>
 
                 <MapShow showInput={false} lat={safeGet(data, ["0", "0", "jobDetails", "Latitude"], 0)} lng={safeGet(data, ["0", "0", "jobDetails", "Longitude"], 0)}/>
+
+                {(safeGet(data, ["0", "0", "Job Status"]) && status !== "Pending" && status !== "Rejected" ) &&
+
+                    <div className=" grid grid-cols-1 items-center gap-1 w-full bg-white p-2">
+                        <div className="">
+                            <Btn.SmallBtn onClick={() => {
+                                let user_id = safeGet(data, ["0", "0", "Receiver Id"], "");
+
+                                if (user_id <= 0) {
+                                    errorAlert({
+                                        icon: "info",
+                                        title: "Poor Internet Connection",
+                                        text: "please check your connection and try again"
+                                    });
+                                    return false;
+                                }
+
+                                dispatch(setRecipient({ "Receiver ID": user_id }));
+                                dispatch(setChatFocus("single-chat"));
+                                dispatch(toggleChat());
+                            }} fullWidth>
+                                <span>Chat With Requester</span>
+                                <i className="bi bi-chat-fill text-xl mx-2 "></i>
+                            </Btn.SmallBtn>
+                        </div>
+                    </div>
+                }
+
             </div>
 
-            {(safeGet(data, ["0", "0", "Job Status"]) && status !== "Pending" && status !== "Rejected" ) &&
+            {(safeGet(data, ["0", "0", "Job Status"]) && status !== "Pending" && status !== "Rejected" && status !== "Completed" ) &&
                 
                 <div className=" grid grid-cols-1 items-center gap-1 absolute bottom-0 left-0 w-full bg-white p-2">
                     <div className="">
-                        <Btn.SmallBtn onClick={() => {}} fullWidth>
-                            <span>Chat With Requester</span>
-                            <i className="bi bi-chat-fill text-xl mx-2 "></i>
+                        <Btn.SmallBtn onClick={handleCompleted} fullWidth>
+                            <span>Complete Job</span>
+                            <i className="bi bi-boxes text-xl mx-2 "></i>
                         </Btn.SmallBtn>
                     </div>
                 </div>

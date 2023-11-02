@@ -22,7 +22,7 @@ export const useServiceSearch = (searchInput, state="active") => {
             for(let i = 0; i < safeGet(item, ["Services Provided"], []).length; i++) {
 
                 let sub = item["Services Provided"][i];
-                let check = sub.Title.toLowerCase().indexOf(searchInput.toLowerCase().slice(0, 6)) >= 0;
+                let check = sub.Title.toLowerCase().indexOf(searchInput.toLowerCase().slice(0, parseInt(searchInput.length / 2))) >= 0;
                 if(check) match = check;
             }
 
@@ -63,9 +63,7 @@ export const usePopularServices = () => {
         
         result.map( item => {
             services = [...services, ...item["Services Provided"]];
-        })
-        
-        console.log(services);
+        });
 
         return services;
         

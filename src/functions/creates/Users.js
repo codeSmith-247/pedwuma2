@@ -1,4 +1,4 @@
-import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword } from "firebase/auth";
 import { addDoc, updateDoc, doc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
@@ -21,6 +21,8 @@ export const newUser = async (userdata) => {
         auth.useDeviceLanguage();
     
         const result = await createUserWithEmailAndPassword(auth, userdata.email, userdata.password);
+
+        const signIn = await signInWithEmailAndPassword(auth, userdata.email, userdata.password);
 
         sendEmailVerification(auth.currentUser);
 
@@ -105,7 +107,7 @@ export const newProfile = async (profiledata) => {
                     "People Applied": 0,
                 },
                 "Service Information": {
-                    Charge: profiledata?.amount,
+                    Charge: parseFloat(profiledata?.amount),
                     "Charge Rate": profiledata?.chargeRate,
                     "Expertise": profiledata?.expertise,
                     "Service Category": profiledata?.category,

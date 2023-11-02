@@ -176,7 +176,7 @@ export default function () {
                     <h3 className="font-semibold orb mb-5">Application Information</h3>
 
                     <form className="my-3">
-                        <div className="grid grid-cols-10 gap-3 mb-6">
+                        <div className="grid grid-cols-10 gap-3 mb-6 max-[550px]:grid-cols-1">
 
                             <div className="col-span-3">
                                 <FormControl fullWidth>

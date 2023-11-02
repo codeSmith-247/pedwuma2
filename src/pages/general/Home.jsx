@@ -39,7 +39,9 @@ export default function() {
                             <span className="font-semibold text-blue-600">"WE DE FOR YOU!"</span>
                         </p>
 
-                        <Btn.BigBtn>Join Us Now</Btn.BigBtn>
+                        <Link to="/signup">
+                            <Btn.BigBtn>Join Us Now</Btn.BigBtn>
+                        </Link>
                     </div>
                 </div>
             </div>

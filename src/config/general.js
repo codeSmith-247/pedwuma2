@@ -6,6 +6,10 @@ const initialValue = {
   loggedIn: false,
   role: "",
   plan: {},
+  chat: false,
+  recipient: null,
+  chatFocus: "chat",
+  lang: "english",
 };
 
 const general = createSlice({
@@ -30,9 +34,28 @@ const general = createSlice({
       state.role = "";
       state.plan = {};
     },
+
+    toggleChat: (state) => {
+      state.chat = !state.chat
+    },
+
+    setRecipient: (state, action) => {
+      state.recipient = action.payload
+    },
+
+    setChatFocus: (state, action) => {
+      state.chatFocus = action.payload
+    },
+
+    setLang: (state, action) => {
+      state.lang = action.payload
+
+      console.log(action.payload, "language");
+    }
+
   },
 });
 
-export const { login, logout } = general.actions;
+export const { login, logout, toggleChat, setRecipient, setChatFocus, setLang } = general.actions;
 
 export default general.reducer;

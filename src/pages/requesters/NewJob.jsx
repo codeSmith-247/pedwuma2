@@ -136,7 +136,7 @@ export default function () {
 
             {inDisplay == "info" && 
                 <div>
-                    <i onClick={() => setInDisplay("certificate")} className="bi bi-chevron-left bg-blue-500 text-white h-[30px] w-[30px] rounded-md flex items-center justify-center"></i>
+                    <i onClick={() => setInDisplay("service")} className="bi bi-chevron-left bg-blue-500 text-white h-[30px] w-[30px] rounded-md flex items-center justify-center"></i>
 
                     <h1 className="orb text-3xl text-center font-medium mx-auto my-6">Job Details</h1>
                     

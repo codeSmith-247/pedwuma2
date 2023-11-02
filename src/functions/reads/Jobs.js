@@ -1,8 +1,9 @@
 import { useQuery } from "react-query";
-import { collection, getDocs, query, where, and, getCountFromServer, Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, where, and, getCountFromServer, Timestamp, startAt, endAt } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../config/firebase";
 import refs from "../refs";
+import { geohashQueryBounds } from "geofire-common";
 
 
 const startDate = Timestamp.fromDate(new Date(0));
@@ -22,6 +23,8 @@ export const useJobs = (page=1) => {
         return jobs;
     })
 }
+
+
 
 
 export const useTotalJobsByStatus = (status="Applied") => {

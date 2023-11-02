@@ -1,8 +1,10 @@
 import { getAuth, updateEmail, updateProfile, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail } from "firebase/auth";
-import { updateDoc, arrayUnion, doc, setDoc } from "firebase/firestore";
+import { updateDoc, arrayUnion, doc, setDoc, query, where, getDocs, getCountFromServer, orderBy } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { getDocById } from "../reads/General";
 import { uploadFile } from "../utils/Files";
+import refs from "../refs";
+import { extractNames } from "../utils/Fixers";
 
 export const changeEmail = async (email, password, oldEmail) => {
 
@@ -25,7 +27,6 @@ export const changeEmail = async (email, password, oldEmail) => {
 
 }
 
-
 export const resetPassword = async (email) => {
     try { 
 
@@ -41,6 +42,148 @@ export const resetPassword = async (email) => {
     }
 }
 
+export const upgradePlan = async (plan, reference) => {
+    try {
+        getAuth();
+
+        let queryBuild = query( refs.users, where("User ID", "==", getAuth().currentUser.uid ) );
+
+        let snapshot = await getDocs( queryBuild );
+    
+        await Promise.all( snapshot.docs.map( doc => {
+
+            updateDoc(doc.ref, {
+                "Plan": plan
+            });
+
+        } ));
+
+        queryBuild = query( refs.userPlans, where("User ID", "==", getAuth().currentUser.uid ) );
+
+        snapshot = await getDocs( queryBuild );
+    
+        await Promise.all( snapshot.docs.map( doc => {
+
+            updateDoc(doc.ref,  {
+                "Plan ID": plan,
+                "reference": reference,
+            });
+
+        } ));
+
+        return true;
+    }
+    catch(error) {
+        console.log(error);
+        return false;
+    }
+}
+
+export const updateDetails = async (inputs) => {
+    try {
+        getAuth();
+
+        let queryBuild = query( refs.users, where("User ID", "==", getAuth().currentUser.uid ) );
+
+        let snapshot = await getDocs( queryBuild );
+
+        let pic = "";
+
+        if(inputs?.pic) {
+            pic = await uploadFile(`/users/${inputs.name}_${Math.random() * 10}`, inputs.pic);
+        }
+    
+        await Promise.all( snapshot.docs.map( doc => {
+
+            const { firstname, lastname } = extractNames(inputs.name);
+
+            updateDoc(doc.ref, {
+                "First Name": firstname,
+                "Last Name": lastname,
+                "Mobile Number": inputs.number,
+            });
+
+            if(pic.length > 0) {
+                updateDoc(doc.ref, {
+                    "Pic": pic,
+                });
+            }
+
+        } ));
+
+        await changeRole(inputs.role);
+
+        return true;
+    }
+    catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+export const changeRole = async (role) => {
+
+    try {
+
+        getAuth();
+    
+        let plans, queryBuild, snapshot;
+    
+        if(role == "Professional Handyman") {
+            plans = await getDocs( query(refs.userPlans), where("User ID", "==", getAuth().currentUser.uid) );
+    
+            if(plans.docs.length > 0) {
+                queryBuild = query( refs.users, where("User ID", "==", getAuth().currentUser.uid ) );
+    
+                snapshot = await getDocs( queryBuild );
+            
+                await Promise.all( snapshot.docs.map( doc => {
+    
+                    updateDoc(doc.ref, {
+                        "Plan": plans.docs[0].data()["Plan ID"]
+                    });
+    
+                } ));
+            }
+            else {
+                plans = await getDocs( query( refs.plans, orderBy("Amount", "desc") ) );
+    
+                if(plans.docs.length > 0) {
+                    queryBuild = query( refs.users, where("User ID", "==", getAuth().currentUser.uid ) );
+        
+                    snapshot = await getDocs( queryBuild );
+                
+                    await Promise.all( snapshot.docs.map( doc => {
+        
+                        updateDoc(doc.ref, {
+                            "Plan": plans.docs[0].id
+                        });
+    
+                    } ));
+                }
+            }
+        }
+    
+        queryBuild = query( refs.users, where("User ID", "==", getAuth().currentUser.uid ) );
+    
+        snapshot = await getDocs( queryBuild );
+    
+        await Promise.all( snapshot.docs.map( doc => {
+    
+            updateDoc(doc.ref, {
+                "Role": role
+            });
+    
+        } ));
+    
+        return true;
+    }
+    catch (error) {
+        console.log(error);
+        return false;
+    }
+
+}
 
 export const updateBookingProfile = async (profiledata, admin=false) => {
     try {
@@ -60,7 +203,7 @@ export const updateBookingProfile = async (profiledata, admin=false) => {
             ...previous,
             "Service Information": {
                 ...previous["Service Information"],
-                Charge: profiledata?.amount,
+                Charge: parseFloat(profiledata?.amount),
                 "Charge Rate": profiledata?.chargeRate,
                 "Expertise": profiledata?.expertise,
                 

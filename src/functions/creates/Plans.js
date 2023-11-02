@@ -1,6 +1,6 @@
 
 import { db } from "../../config/firebase";
-import { addDoc, query, where, getCountFromServer, serverTimestamp } from "firebase/firestore";
+import { addDoc, updateDoc, query, where, getCountFromServer, serverTimestamp, doc } from "firebase/firestore";
 import refs from "../refs";
 
 
@@ -25,6 +25,10 @@ export const newPlan = async (inputs) => {
             Portfolios: parseFloat(inputs.portfolios),
             "Default Rating": parseFloat(inputs.rating),
             "Upload Timestamp": serverTimestamp(),
+        });
+
+        await updateDoc( doc( db, "Plans", docRef.id), {
+            "Plan ID": docRef.id,
         });
     
         return "success";

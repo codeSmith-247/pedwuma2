@@ -39,7 +39,24 @@ export const userRank = (data, lat=0, lng=0) => {
 
   for(let i = 0; i < copyObj.length; i++ ) {
     let item = copyObj[i];
-    copyObj[i].distance = calculateDistance(item.user.location.Latitude, item.user.location.Longitude, lat, lng);
+    copyObj[i].distance = calculateDistance(item?.user?.location?.Latitude, item?.user?.location?.Longitude, lat, lng);
+  }
+
+  copyObj.sort((map1, map2) => map1.distance - map2.distance);
+
+  return copyObj;
+}
+
+export const jobRank = (data, lat=0, lng=0) => {
+
+  if(typeof data == "undefined") data = [];
+
+  let copyObj = [...data];
+
+
+  for(let i = 0; i < copyObj.length; i++ ) {
+    let item = copyObj[i];
+    copyObj[i].distance = calculateDistance(item?.Latitude, item?.Longitude, lat, lng);
   }
 
   copyObj.sort((map1, map2) => map1.distance - map2.distance);

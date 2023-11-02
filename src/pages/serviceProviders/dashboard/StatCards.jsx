@@ -6,7 +6,12 @@ import { useTotal, useTotalUserType } from "functions/reads/General";
 import { useTotalJobsByStatus, useTotalApplications } from "functions/reads/Jobs";
 import { useTotalBookings } from "functions/reads/Bookings";
 
+import { getAuth } from "firebase/auth";
+import { Timestamp, where } from "firebase/firestore";
 
+const startDate = Timestamp.fromDate(new Date(0));
+const endDate = new Date();
+endDate.setHours(23, 59, 59, 999);
 
 export default function () {
 
@@ -14,25 +19,35 @@ export default function () {
         {
             name: 'Total Jobs',
             icon: 'box',
-            value: useTotalJobsByStatus("Accepted"),
+            value: useTotal("Applications", startDate, endDate, [
+                where("Applier ID", "==", getAuth()?.currentUser?.uid)
+            ]),
+
+        },
+        {
+            name: 'Accepted Jobs',
+            icon: 'boxes',
+            value: useTotal("Applications", startDate, endDate, [
+                where("Applier ID", "==", getAuth()?.currentUser?.uid),
+                where("Job Status", "==", "Accepted"),
+            ]),
 
         },
         {
             name: 'Total Bookings',
             icon: 'tag',
-            value: useTotalBookings(),
+            value: useTotal("Bookings", startDate, endDate, [
+                where("Worker ID", "==", getAuth()?.currentUser?.uid)
+            ])
 
         },
         {
-            name: 'Pending Jobs',
+            name: 'Accepted Bookings',
             icon: 'person-workspace',
-            value: useTotalJobsByStatus("Applied"),
-
-        },
-                {
-            name: 'Total Applications',
-            icon: 'people',
-            value: useTotalApplications(),
+            value: useTotal("Bookings", startDate, endDate, [
+                where("Worker ID", "==", getAuth()?.currentUser?.uid),
+                where("Booking Status", "==", "Accepted"),
+            ])
 
         },
     ]

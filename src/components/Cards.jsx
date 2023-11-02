@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Skeleton } from "@mui/material";
 
 import { safeGet } from "functions/utils/Fixers";
@@ -108,8 +110,8 @@ export function Description({ title="", description="", btnText="", image="/imag
     );
 }
 
-export function Small({ image="/images/pedwuma.jpg", title="Amasaman, Temah, Kumasi, Accra...", containerClass, loading=false, ...props }) {
-
+export function Small({ image="/images/pedwuma.jpg", title="Amasaman, Temah, Kumasi, Accra...", containerClass, loading=false, onItemSelect=()=>{}, selected=false, ...props }) {
+    
     if(loading) return (
         <div className={`${containerClass} relative flex border-2 mb-3 rounded-md overflow-hidden bg-white`} {...props}>
             <Skeleton height={60} width={100} />
@@ -122,7 +124,7 @@ export function Small({ image="/images/pedwuma.jpg", title="Amasaman, Temah, Kum
     );
 
     return (
-        <div className={`${containerClass} relative flex border-2 mb-3 rounded-md overflow-hidden bg-white`} {...props}>
+        <div onClick={(e) => {onItemSelect(e); }} className={`${containerClass} ${selected ? "border-blue-500" : ""} relative flex border-2 mb-3 rounded-md overflow-hidden bg-white`} {...props}>
             <div className="image  h-[60px] w-[100px]">
                 <img src={image} className="object-cover h-full w-full " />
             </div>

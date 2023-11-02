@@ -11,10 +11,14 @@ import { MapShow, Btn, Loading } from "components";
 import { errorAlert } from "../../functions/utils/Alert";
 
 
-
+import { useDispatch } from "react-redux";
+import { toggleChat, setChatFocus, setRecipient } from "../../config/general";
 
 
 export default function () {
+
+
+    const dispatch = useDispatch();
 
     const user = getAuth();
 
@@ -44,7 +48,7 @@ export default function () {
 
             booking.bookingDetails = await getData({
                 target: "Booking Profile",
-                conditions: [ where("User ID", "==", booking["Worker ID"]) ]
+                conditions: [ where("Booking Profile ID", "==", booking["Booking Profile ID"]) ]
             });
 
             booking.bookingDetails = safeGet(booking.bookingDetails, ["0", "0"], {});
@@ -74,6 +78,30 @@ export default function () {
                 errorAlert({
                     title: "System Busy",
                     text: "system is currently unable to accept this booking, please try again later"
+                });
+            }
+
+            setLoad(false);
+        })
+    }
+
+
+    const handleComplete = () => {
+        setLoad(true);
+        setBookingState(decrypt(id), "Completed").then( result => {
+            if(result) {
+                errorAlert({
+                    icon: "success",
+                    title: "Booking Completed Successfully"
+                });
+
+                refetch();
+                queryClient.invalidateQueries();
+            }
+            else {
+                errorAlert({
+                    title: "System Busy",
+                    text: "system is currently unable to complete this booking, please try again later"
                 });
             }
 
@@ -154,7 +182,7 @@ export default function () {
 
                     <div className="my-1 flex gap-2 items-center font-semibold text-gray-600">
                         <span>Status:</span>
-                        <span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{safeGet(data, ["0", "0", "Booking Status"], "Pending")}</span>
+                        <span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : status == "Completed" ? "bg-cyan-800" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{safeGet(data, ["0", "0", "Booking Status"], "Pending")}</span>
                     </div>
 
                     <div className="my-1 flex gap-2 items-center font-semibold text-gray-600">
@@ -164,6 +192,33 @@ export default function () {
                 </div>
 
                 <MapShow showInput={false} lat={safeGet(data, ["0", "0", "Latitude"], 0)} lng={safeGet(data, ["0", "0", "Longitude"], 0)}/>
+
+                {(safeGet(data, ["0", "0", "Booking Status"]) && status !== "Pending" && status !== "Rejected" ) &&
+
+                    <div className=" grid grid-cols-1 items-center gap-1 w-full bg-white p-2">
+                        <div className="">
+                            <Btn.SmallBtn onClick={() => {
+                                let user_id = safeGet(data, ["0", "0", "Requester ID"], "");
+
+                                if (user_id <= 0) {
+                                    errorAlert({
+                                        icon: "info",
+                                        title: "Poor Internet Connection",
+                                        text: "please check your connection and try again"
+                                    });
+                                    return false;
+                                }
+
+                                dispatch(setRecipient({ "Requester ID": user_id }));
+                                dispatch(setChatFocus("single-chat"));
+                                dispatch(toggleChat());
+                            }} fullWidth>
+                                <span>Chat With Requester</span>
+                                <i className="bi bi-chat-fill text-xl mx-2 "></i>
+                            </Btn.SmallBtn>
+                        </div>
+                    </div>
+                }
             </div>
 
 
@@ -179,13 +234,13 @@ export default function () {
                 </div>
             }
 
-            {(safeGet(data, ["0", "0", "Booking Status"]) && status !== "Pending" && status !== "Rejected" ) &&
+            {(safeGet(data, ["0", "0", "Booking Status"]) && status !== "Pending" && status !== "Rejected" && status !=="Completed" ) &&
                 
                 <div className=" grid grid-cols-1 items-center gap-1 absolute bottom-0 left-0 w-full bg-white p-2">
                     <div className="">
-                        <Btn.SmallBtn onClick={handleAccept} fullWidth>
-                            <span>Chat With Requester</span>
-                            <i className="bi bi-chat-fill text-xl mx-2 "></i>
+                        <Btn.SmallBtn onClick={handleComplete} fullWidth>
+                            <span>Complete Job</span>
+                            <i className="bi bi-boxes text-xl mx-2 "></i>
                         </Btn.SmallBtn>
                     </div>
                 </div>

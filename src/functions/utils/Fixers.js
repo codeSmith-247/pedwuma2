@@ -90,6 +90,7 @@ export const getHumanReadableDateDifference = (timestamp1, timestamp2) => {
 
 
 export const readableDate = (timestamp) => {
+    if(!timestamp) return "";
     // Convert Firestore Timestamp to JavaScript Date
     const date = timestamp?.toDate();
   

@@ -22,7 +22,7 @@ export const deleteById = async (target, id, load) => {
 
     errorAlert({
         icon: "success",
-        title: "Delete Successfull"
+        title: "Delete Successful"
     });
 
     return true;

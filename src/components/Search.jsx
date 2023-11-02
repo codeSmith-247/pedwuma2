@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { FormControl, InputLabel, OutlinedInput, CircularProgress } from "@mui/material";
-
+import { EmptyBox } from "components";
 
 export const Search = ({searchingCallback = () => {}, searchCallback = () => {}, resultUi = () => {}, resetCallback = () => {}, data, isLoading, ...props }) => {
 
@@ -37,7 +37,7 @@ export const Search = ({searchingCallback = () => {}, searchCallback = () => {},
             </FormControl>
             { ( data && searchInput.replaceAll(" ", "") !== ""  ) &&
 
-                <div className="absolute z-[20] top-[100%] shadow-xl bg-white left-0 w-full h-max">
+                <div className="absolute z-[20] top-[100%] SeaSearch Search rch  Search dow-xl bg-white left-0 w-full h-max">
                     <div data-aos="fade-in" className=" max-h-[250px] overflow-y-scroll z-0">
                         {data.map( (item, index) => 
                             <div key={index} onClick={() => handleSelectResult(item)}>
@@ -45,6 +45,13 @@ export const Search = ({searchingCallback = () => {}, searchCallback = () => {},
                             </div>
                         )}
                     </div>
+                    <i onClick={resetValues} className="absolute -top-2 -right-2 bg-white h-[30px] w-[30px] flex items-center justify-center rounded-full shadow-xl hover:bg-red-500 hover:text-white z-10 bi bi-x"></i>
+                </div>
+            }
+
+            {((!data || data.length <= 0) && searchInput.replaceAll(" ", "") !== "") &&
+                <div className="absolute z-[20] top-[100%] shadow-xl bg-white left-0 w-full">
+                    <EmptyBox classname=" h-[250px]"  load={((!data || data.length <= 0) && searchInput.replaceAll(" ", "") !== "")} title="No Results Found" text=""/>
                     <i onClick={resetValues} className="absolute -top-2 -right-2 bg-white h-[30px] w-[30px] flex items-center justify-center rounded-full shadow-xl hover:bg-red-500 hover:text-white z-10 bi bi-x"></i>
                 </div>
             }

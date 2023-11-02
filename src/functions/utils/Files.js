@@ -69,7 +69,7 @@ export const getUrlThumbnail = (url) => {
         'bmp':      '',
         'svg+xml':  '',
         'webp':     '',
-        'jpb':      '',
+        'jpg':      '',
     };
 
     // Check if the URL ends with a recognized file extension

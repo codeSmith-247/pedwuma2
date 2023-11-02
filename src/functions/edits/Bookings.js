@@ -3,6 +3,7 @@ import { doc, updateDoc, } from "firebase/firestore";
 
 import { db } from "../../config/firebase";
 
+import { getDocById } from "../reads/General";
 
 
 export const setBookingState = async (id, state) => {

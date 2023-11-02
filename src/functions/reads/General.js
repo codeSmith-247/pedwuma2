@@ -1,8 +1,9 @@
 
 import { useQuery } from "react-query";
-import { collection, doc, getDoc, getDocs, getCountFromServer, Timestamp, query, where, and, or, orderBy, limit, startAfter, } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, getCountFromServer, Timestamp, query, where, and, or, orderBy, limit, startAfter, startAt, endAt } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import refs from "../refs";
+import { geohashQueryBounds } from "geofire-common";
 
 
 const startDate = Timestamp.fromDate(new Date(0));
@@ -15,7 +16,9 @@ export const getDocById = async (target, id) => {
     try {
         
         const planRef = doc(db, target, id);
-    
+ 
+        
+
         const snapshot = await getDoc(planRef);
     
         if(snapshot.exists()) return snapshot.data();
@@ -39,7 +42,7 @@ export const useDocById = (target, id, callback=()=>{}) => {
     }, {onCompleted: (data) => callback(data)});
 }
 
-export const useTotal = (target="", start = startDate, end = endDate) => {
+export const useTotal = (target="", start = startDate, end = endDate, conditions=[]) => {
 
     return useQuery(["total", target, start, end], async () => {
 
@@ -47,8 +50,9 @@ export const useTotal = (target="", start = startDate, end = endDate) => {
             query( collection(db, target) , 
                 and(
                     where("Upload Timestamp", "<=", end), 
-                    where("Upload Timestamp", ">=", start)
-                )
+                    where("Upload Timestamp", ">=", start),
+                    ...conditions
+                ),
             );
         
         const snapshot = await getCountFromServer(queryBuild);
@@ -80,7 +84,9 @@ export const useData = ({
 
         const queryBuild  =  
             query( collection(db, target) , 
-                ...conditions
+                ...conditions,
+                // orderBy("Upload Timestamp"),
+                // startAfter(page)
             );
 
         const snapshot = await getDocs(queryBuild);
@@ -106,6 +112,50 @@ export const useData = ({
         ]
 
     });
+}
+
+export const useLocationData = async ({ target, lat, lng, conditions, page=1, callback }) => {
+
+    return useQuery(["data by loc", target, page, conditions, callback], async () => {
+
+        const bounds = geohashQueryBounds([lat, lng], 637100000);
+
+        const promises = [];
+
+        for (const b of bounds) {
+            const q = query(
+            collection(db, target),
+            ...conditions,
+            orderBy('Geohash'), 
+            startAt(b[0]), 
+            endAt(b[1]));
+        
+            promises.push(getDocs(q));
+        }
+
+        const snapshots = await Promise.all(promises);
+
+        const result = [];
+        for (const snap of snapshots) {
+            for (const doc of snap.docs) {
+                
+                result.push({id: doc.id, ...doc.data()});
+                
+            }
+        }
+
+        if(callback) 
+        for( let i = 0; i < result.length; i++ ) {
+            let data = result[i];
+
+            data = await callback(data);
+
+            result[i] = data;
+        }
+
+        return result;
+    });
+      
 }
 
 export const getData = async ({

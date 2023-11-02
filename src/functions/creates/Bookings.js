@@ -14,7 +14,7 @@ export const newBooking = async (bookingData) => {
         const latLng = await ipInfo();
 
 
-        if( typeof bookingData?.location?.description !== "undefined") {
+        if( typeof bookingData?.location?.description !== "undefined" && typeof bookingData.location.lat !== "undefined") {
 
             location.address = bookingData.location.description;
             location.lat = bookingData.location.lat;
@@ -39,7 +39,7 @@ export const newBooking = async (bookingData) => {
             
             "Address": location.address,
             "Booking Status": "Pending",
-            "Charge": bookingData.charge,
+            "Charge": parseFloat(bookingData.charge),
             "Charge Rate": bookingData.chargeRate,
             "Geo Hash": "",
             "Latitude": location.lat,
@@ -49,6 +49,7 @@ export const newBooking = async (bookingData) => {
             "Schedule Date": Timestamp.fromDate(bookingDate),
             "Upload Timestamp": serverTimestamp(),
             "Worker ID": bookingData.skilledId,
+            "Booking Profile ID": bookingData.profileId,
         });
     
     

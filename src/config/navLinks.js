@@ -1,6 +1,8 @@
 
 
-export const AdminLinks = [
+
+
+const General = [
     {
         name: 'Dashboard',
         icon: 'grid',
@@ -16,10 +18,28 @@ export const AdminLinks = [
     {
         name: 'Jobs',
         icon: 'box',
-        link: '',
+        link: '/admin/jobs',
     },
 
+];
 
+
+const GeneralEnd = [
+    {
+        name: 'Settings',
+        icon: 'gear',
+        link: '/admin/settings',
+    },
+    {
+        name: 'Home',
+        icon: 'house',
+        link: '/',
+    },
+]
+
+export const AdminLinks = [
+
+    ...General,
 
     {
         name: 'Users',
@@ -39,26 +59,13 @@ export const AdminLinks = [
         link: '/admin/plans',
     },
 
-    {
-        name: 'Settings',
-        icon: 'gear',
-        link: '',
-    },
+    ...GeneralEnd,
 ];
 
 
 export const WorkerLinks = [
-    {
-        name: 'Dashboard',
-        icon: 'grid',
-        link: '',
-    },
 
-    {
-        name: 'Bookings',
-        icon: 'ticket',
-        link: '/admin/bookings',
-    },
+    ...General,
 
     {
         name: 'My Profiles',
@@ -66,37 +73,13 @@ export const WorkerLinks = [
         link: '/admin/profiles',
     },
 
-    {
-        name: 'Jobs',
-        icon: 'box',
-        link: '/admin/jobs',
-    },
-
-    {
-        name: 'Settings',
-        icon: 'gear',
-        link: '',
-    },
+    ...GeneralEnd,
 ];
 
 export const RequesterLinks = [
-    {
-        name: 'Dashboard',
-        icon: 'grid',
-        link: '',
-    },
+    ...General,
 
-    {
-        name: 'Bookings',
-        icon: 'ticket',
-        link: '/admin/bookings',
-    },
 
-    {
-        name: 'Jobs',
-        icon: 'box',
-        link: '/admin/jobs',
-    },
 
     {
         name: 'Applications',
@@ -104,9 +87,5 @@ export const RequesterLinks = [
         link: '/admin/applications',
     },
 
-    {
-        name: 'Settings',
-        icon: 'gear',
-        link: '',
-    },
+    ...GeneralEnd,
 ];

@@ -3,34 +3,48 @@
 import { Cards } from "components";
 import { paddNumber } from "functions/utils/Fixers";
 import { useTotal, useTotalUserType } from "functions/reads/General";
+import { getAuth } from "firebase/auth";
+import { Timestamp, where } from "firebase/firestore";
 
-
+const startDate = Timestamp.fromDate(new Date(0));
+const endDate = new Date();
+endDate.setHours(23, 59, 59, 999);
 
 export default function () {
+
+    const auth = getAuth();
 
     const stats = [
         {
             name: 'Total Jobs',
             icon: 'box',
-            value: useTotal("Jobs"),
+            value: useTotal("Jobs", startDate, endDate, [
+                where("Client ID", "==", getAuth()?.currentUser?.uid)
+            ]),
+
+        },
+        {
+            name: 'Applications',
+            icon: 'people',
+            value: useTotal("Applications", startDate, endDate, [
+                where("Receiver Id", "==", getAuth()?.currentUser?.uid)
+            ]),
 
         },
         {
             name: 'Total Bookings',
             icon: 'tag',
-            value: useTotal("Jobs"),
-
+            value: useTotal("Bookings", startDate, endDate, [
+                where("Requester ID", "==", getAuth()?.currentUser?.uid)
+            ])
         },
         {
-            name: 'Total Workers',
+            name: 'Accepted Bookings',
             icon: 'person-workspace',
-            value: useTotalUserType("Professional Handyman"),
-
-        },
-                {
-            name: 'Total Employers',
-            icon: 'people',
-            value: useTotalUserType("Regular Customer"),
+            value: useTotal("Bookings", startDate, endDate, [
+                where("Requester ID", "==", getAuth()?.currentUser?.uid),
+                where("Booking Status", "==", "Accepted"),
+            ])
 
         },
     ]

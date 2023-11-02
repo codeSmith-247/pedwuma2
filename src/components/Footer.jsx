@@ -1,8 +1,12 @@
-
+import { useState } from "react";
 
 import { FormControl, InputLabel, OutlinedInput, InputAdornment } from "@mui/material";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Btn } from "./";
+import { Btn, Loading } from "./";
+
+import { sendMessage } from "functions/creates/Messages";
+import { checkInputsOnObj } from "functions/utils/Fixers";
+import { errorAlert } from "functions/utils/Alert";
 
 const darkTheme = createTheme({
   palette: {
@@ -12,15 +16,47 @@ const darkTheme = createTheme({
 
 
 export default function () {
+
+    const [ inputs, setInputs ] = useState({
+        email: "",
+        number: "",
+        message: "",
+    });
+
+    const [ load, setLoad ] = useState(false);
+
+    const triggerSend = () => {
+        if(!checkInputsOnObj(inputs, ["message", "email", "number"])) {
+            errorAlert({
+                title: "Empty Inputs",
+                text: "Please check all your inputs and try again."
+            });
+            return false;
+        }
+
+        setLoad(true);
+
+        sendMessage(inputs.email, inputs.number, inputs.message).then( result => {
+            console.log(result);
+            errorAlert({
+                icon: result.data.status,
+                title: result.data.title,
+                text: result.data.message,
+            })
+            setLoad(false);
+        })
+    }
+
     return (
         <footer className="bg-black text-white mt-10">
+            <Loading load={load} />
             <ThemeProvider theme={darkTheme}>
                 <div className="big p-10 max-[1165px]:p-5 max-[800px]:flex-col flex items-center justify-between gap-2">
                     <div className="flex flex-grow items-center justify-between gap-5 max-[1165px]:flex-col max-[1165px]:items-start">
                         <div className=" text-center w-max max-[800px]:w-full ">
                             <div className="font-bold text-4xl orb my-5 flex items-center gap-2 justify-center">
                                 <img src="/images/logo.png" className="object-cover h-[60px] w-[60px]" />
-                                <span className="orb">PEDWUMA</span>
+                                <span className="orb font-black">PEDWUMA</span>
                             </div>
                             <div className="flex items-center max-[800px]:justify-center gap-6 bottom-12 right-1 p-3">
                                 <div className="h-[45px] w-[140px] border-2 active:border-black hover:border-blue-600 shadow relative group bg-black px-3 rounded-md">
@@ -57,6 +93,8 @@ export default function () {
                                     borderColor: 'blue'
                                 }}
                                 size="small"
+                                value={inputs.email}
+                                onChange={(e) => setInputs({...inputs, email: e.target.value})}
                             />
 
                         </FormControl>
@@ -73,6 +111,8 @@ export default function () {
                                     borderColor: 'blue'
                                 }}
                                 size="small"
+                                value={inputs.number}
+                                onChange={(e) => setInputs({...inputs, number: e.target.value})}
                                 
                             />
                         </FormControl>
@@ -91,10 +131,12 @@ export default function () {
                                 size="small"
                                 multiline
                                 rows={3}
+                                value={inputs.message}
+                                onChange={(e) => setInputs({...inputs, message: e.target.value})}
                             />
                         </FormControl>
 
-                        <Btn.SmallBtn fullWidth>Send Message</Btn.SmallBtn>
+                        <Btn.SmallBtn onClick={triggerSend} fullWidth>Send Message</Btn.SmallBtn>
 
                     </form>
                 </div>

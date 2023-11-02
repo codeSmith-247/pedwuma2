@@ -15,6 +15,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { Skeleton } from "@mui/material";
 
 
 
@@ -39,7 +40,7 @@ export default function() {
 
             booking.bookingDetails = await getData({
                 target: "Booking Profile",
-                conditions: [ where("User ID", "==", booking["Worker ID"]) ]
+                conditions: [ where("Booking Profile ID", "==", booking["Booking Profile ID"]) ]
             });
 
             booking.bookingDetails = safeGet(booking.bookingDetails, ["0", "0"], {});
@@ -102,6 +103,10 @@ export default function() {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {!data && Array.from({length: 10}, (item, index) => 
+                <Skeleton key={index} height={100} />
+            )}
 
             <EmptyBox load={typeof(data) != 'undefined' && data[0]?.length <= 0} title="No Bookings Yet" text=""/>
 

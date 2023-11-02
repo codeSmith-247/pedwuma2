@@ -1,27 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-import { Link } from "react-router-dom";
-import { Header, Btn } from "components";
+import { Link, useNavigate } from "react-router-dom";
+import { Header, Btn, Cards, PopularServices, EmptyBox } from "components";
 
 import { LocationSearch, ServiceSearch } from "../../components/BoxSearch";
 
-import { InputLabel, MenuItem, FormControl, Select } from '@mui/material';
+import { InputLabel, MenuItem, FormControl, Select, Skeleton } from '@mui/material'
 
 import { useData, getData } from "functions/reads/General";
-import { safeGet, encrypt } from "functions/utils/Fixers";
 
-import { Skeleton } from "@mui/material";
+import { encrypt, safeGet } from "functions/utils/Fixers";
 
-import { where } from "firebase/firestore";
+import { where, limit, orderBy, and, startAt, endAt } from "firebase/firestore";
+
+import { jobRank, ipInfo } from "functions/utils/Locations";
+
+import { geohashQueryBounds } from "geofire-common";
+
+
+let lat = 5.7062137;
+let lng = -0.3019281;
+
+ipInfo().then( result => {
+    lat = result?.lat;
+    lng = result?.lng;
+});
 
 
 export default function() {
 
     const [ showMenu, setShowMenu ] = useState(false);
+    const [ parameterChange, setParameterChange ] = useState(false);
+    const navigate = useNavigate();
+    const [ location, setLocation ] = useState({
+        lat: lat,
+        lng: lng,
+        bounds: geohashQueryBounds([lat,lng], 50000000)
+
+    });
+
+    useEffect(() => {
+        setLocation({
+            lat: lat,
+            lng: lng,
+            bounds: geohashQueryBounds([lat,lng], 50000000)
+        })
+    }, [lat, lng]);
+
+
+
+    const [ parameters, setParameters ] = useState({
+        service: "",
+        conditions: [where("Job Details.Job Status", "==", "Pending"), orderBy("Work Detail & Rating.Rating", "desc"), limit(100)],
+        location: null,
+        orderBy: ["Work Detail & Rating.Rating", "desc"],
+        orderMap: {
+            "More E": ["Work Detail & Rating.Rating", "desc"],
+            "Less E": ["Work Detail & Rating.Rating", "asc"],
+            "Low P":  ["Service Information.Charge", "asc"],
+            "High P": ["Service Information.Charge", "desc"],
+        }
+    });
 
     const { data } = useData({
         target: "Jobs",
-        conditions: [],
+        conditions: parameters.conditions,
         callback: async (job) => {
             job.user = await getData({
                 target: "users",
@@ -36,6 +79,53 @@ export default function() {
 
     console.log(data);
 
+    useEffect(() => {
+
+
+        if(parameters.location != null) {
+            setLocation({
+                lat: safeGet(parameters, ["location", "lat"], 0),
+                lng: safeGet(parameters, ["location", "lng"], 0),
+                bounds: geohashQueryBounds([safeGet(parameters, ["location", "lat"], 0), safeGet(parameters, ["location", "lng"], 0)], 50000000)
+            })
+        }
+
+        if(parameters.service !== "") {
+            setParameters({ ...parameters, conditions: [ 
+                and(
+                    where("Job Details.Job Status", "==", "Pending"),
+                    where("Service Information.Service Provided", "==", parameters.service),
+                ),
+                orderBy(...parameters.orderBy),
+                limit(100),
+            ]});
+        }
+        else {
+            setParameters({ ...parameters, conditions: [ 
+                and(
+                    where("Job Details.Job Status", "==", "Pending"),
+                    where("Job Details.Job Status", "==", "Pending"),
+                ),
+                orderBy(...parameters.orderBy),
+                limit(100),
+            ]});
+        }
+
+    }, [parameterChange]);
+
+    const checkToDefault = (input) => {
+
+        if (input.replaceAll(" ", "") == "") {
+            setParameters({...parameters, service: "", conditions: [
+            and(
+                where("Job Details.Job Status", "==", "Pending"), 
+                where("Work Detail & Rating.Rating", "desc"), 
+            ),
+            limit(100)]});
+            setParameterChange(!parameterChange);
+        }
+    }
+
     return (
         <>
 
@@ -49,23 +139,23 @@ export default function() {
 
                 <h2 className="orb py-5 font-bold">Search For Jobs</h2>
 
-                <div className="gap-2 max-[850px]:hidden flex items-center grid grid-cols-6 rounded">
+                <div className="gap-2 max-[850px]:hidden items-center grid grid-cols-6 rounded">
                     <div className="grid grid-cols-1 col-span-2 max-[850px]:col-span-6">
-                        <LocationSearch sx={{boxShadow: "0 0 1px #2222223c"}} />
+                        <LocationSearch callback={(location) => {setParameters({...parameters, location}); setParameterChange(!parameterChange)}} sx={{boxShadow: "0 0 1px #2222223c"}} />
                     </div>
 
                     <div className="grid grid-cols-1 col-span-4 max-[850px]:col-span-6">
-                        <ServiceSearch sx={{boxShadow: "0 0 1px #2222223c"}}/>
+                        <ServiceSearch callback={(sub) => {setParameters({...parameters, service: safeGet(sub, "Title", "")}); setParameterChange(!parameterChange)}} whatUserTypes={checkToDefault} sx={{boxShadow: "0 0 1px #2222223c"}}/>
                     </div>
                 </div>
 
-                <div className="gap-2 hidden max-[850px]:grid max-[850px]:gap-4 flex items-center grid-cols-6 rounded">
+                <div className="gap-2 hidden max-[850px]:grid max-[850px]:gap-4 items-center grid-cols-6 rounded">
                     <div className="grid grid-cols-1 col-span-2 max-[850px]:col-span-6">
-                        <LocationSearch sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
+                        <LocationSearch callback={(location) => {setParameters({...parameters, location}); setParameterChange(!parameterChange)}} sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
                     </div>
 
                     <div className="grid grid-cols-1 col-span-4 max-[850px]:col-span-6">
-                        <ServiceSearch sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
+                        <ServiceSearch callback={(sub) => {setParameters({...parameters, service: safeGet(sub, "Title", "")}); setParameterChange(!parameterChange)}}  whatUserTypes={checkToDefault} sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
                     </div>
                 </div>
 
@@ -79,7 +169,7 @@ export default function() {
 
                 <div className="overflow-hidden h-max splitboard flex gap-4 relative top-0 right-0" style={{"--menu": '300px'}}>
                     <div className="right min-h-screen">
-                        {data && data[0].map( (item, index) => 
+                        {data && jobRank(data[0], location.lat, location.lng )?.map( (item, index) => 
                             <div key={index} className="min-h-[222px] mb-4 border border-gray-200 shadow-xs hover:shadow-lg bg-white rounded-md overflow-hidden relative grid grid-cols-10">
                                 <div className="image col-span-2 max-[865px]:col-span-3 max-[550px]:col-span-10 max-[550px]:h-[250px] ">
                                     <img src={safeGet(item.user, ["Pic"], "/images/user.png")} className="object-cover h-full w-full " />
@@ -160,41 +250,31 @@ export default function() {
                                 </div>
                             </div>
                         )}
+                        <EmptyBox load={typeof(data) != 'undefined' && safeGet(data, ["0"], []).length <= 0} title="No Jobs Found" text=""/>
+
                     </div>
-                    <div className={`left right-0 top-0 bg-white z-10 border shadow p-2 py-5 rounded-md h-max  ${ showMenu ? 'right-0' : '-right-[200vw]' }`}>
+                    <div className={`left top-0 bg-white z-10 border shadow p-2 py-5 rounded-md h-max relative  ${ showMenu ? 'right-0' : 'max-[1185px]:-right-[200vw]' }`}>
                         <FormControl fullWidth>
-                            <InputLabel id="demo-simple-select-label">Jobs That Need</InputLabel>
+                            <InputLabel id="demo-simple-select-label">Workers with</InputLabel>
                             <Select
                                 labelId="demo-simple-select-label"
                                 id="demo-simple-select"
-                                value={10}
+                                defaultValue={"More E"}
                                 label="Workers that are?"
                                 size="small"
-                                // onChange={handleChange}
+                                onChange={(e) => {setParameters({...parameters, orderBy: parameters.orderMap[e.target.value]}); setParameterChange(!parameterChange)}}
                             >
-                                <MenuItem value={10}>More Experienced</MenuItem>
-                                <MenuItem value={20}>Less Experienced</MenuItem>
-                                <MenuItem value={30}>Low Pay</MenuItem>
-                                <MenuItem value={30}>High Pay</MenuItem>
+                                <MenuItem value={"More E"}>High Rank</MenuItem>
+                                <MenuItem value={"Less E"}>Low Rank</MenuItem>
+                                <MenuItem value={"Low P"}>Low Pay</MenuItem>
+                                <MenuItem value={"High P"}>High Pay</MenuItem>
                             </Select>
                         </FormControl>
 
                         <h1 className="orb my-5">Popular Services</h1>
 
-                        <div className="">
-                            {Array.from({length: 20}, (item, index) => 
-                                <div key={index} className="relative flex border mb-3 rounded-md overflow-hidden">
-                                    <div className="image  h-[60px]">
-                                        <img src="/images/pedwuma.jpg" className="object-cover h-full w-full " />
-                                    </div>
-                                    <div className="bg-white px-3 py-2 ">
-                                        <div className="text-gray-600 flex items-center gap-2 text-xs">
-                                            <span className="" style={{width: 'calc(100% - 35px)'}}>Amasaman, Temah, Kumasi, Accra...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <PopularServices callback={(sub) => {setParameters({...parameters, service: safeGet(sub, "Title", "")}); setParameterChange(!parameterChange)}} />
+
                     </div>
                 </div>
             </div>

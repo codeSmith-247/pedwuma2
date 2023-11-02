@@ -1,24 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
-import { Header, Btn, Cards, PopularServices } from "components";
+import { Header, Btn, Cards, PopularServices, EmptyBox } from "components";
 
 import { LocationSearch, ServiceSearch } from "../../components/BoxSearch";
 
 import { InputLabel, MenuItem, FormControl, Select } from '@mui/material'
 
-import { useData } from "functions/reads/General";
+import { useData, getData } from "functions/reads/General";
 
-import { encrypt } from "functions/utils/Fixers";
+import { encrypt, safeGet } from "functions/utils/Fixers";
 
+import { where, limit, orderBy } from "firebase/firestore";
+
+import { userRank, ipInfo } from "functions/utils/Locations";
+
+import { t } from "../../functions/utils/Translator";
+
+import { useSelector } from 'react-redux';
+
+
+let lat = 0;
+let lng = 0;
+
+ipInfo().then( result => {
+    lat = result?.lat;
+    lng = result?.lng;
+});
 
 export default function() {
 
+    const lang = useSelector((state) => state.general.lang);
+
     const [ showMenu, setShowMenu ] = useState(false);
+    const [ refetchCheck, setRefetchCheck ] = useState(false);
+    const [ parameterChange, setParameterChange ] = useState(false);
     const navigate = useNavigate();
+    const [ fallbackLocation, setFallbackLocation ] = useState({
+        lat: lat,
+        lng: lng,
+    });
+
+    useEffect(() => {
+        setFallbackLocation({
+            lat: lat,
+            lng: lng
+        })
+    }, [lat, lng]);
+
+
+
+    const [ parameters, setParameters ] = useState({
+        service: "",
+        conditions: [orderBy("Work Experience & Certification.Rating", "desc"), limit(100)],
+        location: null,
+        orderBy: ["Work Experience & Certification.Rating", "desc"],
+        orderMap: {
+            "More E": ["Work Experience & Certification.Rating", "desc"],
+            "Less E": ["Work Experience & Certification.Rating", "asc"],
+            "Low P":  ["Service Information.Charge", "asc"],
+            "High P": ["Service Information.Charge", "desc"],
+        }
+    });
 
     const { data } = useData({
         target: "Booking Profile",
+        conditions: parameters.conditions,
         callback: async (person) => {
             person.user = await getData({
                 target: "users",
@@ -41,36 +88,66 @@ export default function() {
         }
     });
 
+    useEffect(() => {
+
+        console.log(parameters);
+
+        if(parameters.service !== "") {
+            setParameters({ ...parameters, conditions: [ 
+                where("Service Information.Service Provided", "==", parameters.service),
+                orderBy(...parameters.orderBy),
+                limit(100),
+            ]});
+        }
+        else {
+            setParameters({ ...parameters, conditions: [ 
+                orderBy(...parameters.orderBy),
+                limit(100),
+            ]});
+        }
+
+    }, [parameterChange]);
+
+    const checkToDefault = (input) => {
+
+
+
+        if (input.replaceAll(" ", "") == "") {
+            setParameters({...parameters, service: "", conditions: [where("Work Experience & Certification.Rating", "desc"), limit(100)]});
+            setParameterChange(!parameterChange);
+        }
+    }
+
     return (
         <>
 
             <Header 
                 image={`/images/workers.jpg`} 
-                title={<>Find<span className="text-blue-400 orb"> The Workers You Need </span>For All Your Jobs</>}
-                text={<>Are you looking for people to help with plumbing, carpentry, sewing, catering, or other jobs? You can check our list of workers and choose the right people for your job</>}
+                title={<>{t(lang, "Find")}<span className="text-blue-400 orb"> {t(lang, "The Workers You Need")} </span>{t(lang, "For All Your Jobs")}</>}
+                text={<>{t(lang, "Are you looking for people to help with plumbing, carpentry, sewing, catering, or other jobs? You can check our list of workers and choose the right people for your job")}</>}
             />
 
             <div className="px-10 py-5 max-[1165px]:px-5">
 
-                <h2 className="orb py-5 font-bold">Search For Workers</h2>
+                <h2 className="orb py-5 font-bold">{t(lang, "Search For Workers")}</h2>
 
-                <div className="gap-2 max-[850px]:hidden flex items-center grid grid-cols-6 rounded">
+                <div className="gap-2 max-[850px]:hidden items-center grid grid-cols-6 rounded">
                     <div className="grid grid-cols-1 col-span-2 max-[850px]:col-span-6">
-                        <LocationSearch sx={{boxShadow: "0 0 1px #2222223c"}} />
+                        <LocationSearch callback={(location) => {setParameters({...parameters, location}); setParameterChange(!parameterChange)}} sx={{boxShadow: "0 0 1px #2222223c"}} />
                     </div>
 
                     <div className="grid grid-cols-1 col-span-4 max-[850px]:col-span-6">
-                        <ServiceSearch sx={{boxShadow: "0 0 1px #2222223c"}}/>
+                        <ServiceSearch callback={(sub) => {setParameters({...parameters, service: safeGet(sub, "Title", "")}); setParameterChange(!parameterChange)}} whatUserTypes={checkToDefault} sx={{boxShadow: "0 0 1px #2222223c"}}/>
                     </div>
                 </div>
 
-                <div className="gap-2 hidden max-[850px]:grid max-[850px]:gap-4 flex items-center grid-cols-6 rounded">
+                <div className="gap-2 hidden max-[850px]:grid max-[850px]:gap-4 items-center grid-cols-6 rounded">
                     <div className="grid grid-cols-1 col-span-2 max-[850px]:col-span-6">
                         <LocationSearch sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
                     </div>
 
                     <div className="grid grid-cols-1 col-span-4 max-[850px]:col-span-6">
-                        <ServiceSearch sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
+                        <ServiceSearch whatUserTypes={(input) => { input.replaceAll(" ", "") == "" ? setParameters({...parameters, conditions: [where("Work Experience & Certification.Rating", "desc"), limit(100)]}) : ""}} sx={{boxShadow: "0 0 1px #2222223c"}} size="small" />
                     </div>
                 </div>
 
@@ -79,39 +156,42 @@ export default function() {
             <div className="px-10 max-[1165px]:px-5">
                 <i onClick={() => setShowMenu(!showMenu)} className={`bi bi-${showMenu ? 'x-lg' : 'list'} max-[1185px]:flex hidden mb-5 shadow h-[40px] w-[40px] rounded items-center justify-center text-xl`}></i>
                 <div className="overflow-hidden h-max splitboard flex gap-4 relative top-0 right-0" style={{"--menu": '300px'}}>
-                    <div className={`left left-0 top-0 bg-white z-10 border shadow p-2 py-5 rounded-md h-max  ${ showMenu ? 'left-0' : '-left-[200vw]' }`}>
+                    <div className={`left top-0 bg-white z-10 border shadow p-2 py-5 rounded-md h-max  ${ showMenu ? 'left-0' : 'max-[1185px]:-left-[200vw]' }`}>
                         <FormControl fullWidth>
-                            <InputLabel id="demo-simple-select-label">Workers that are?</InputLabel>
+                            <InputLabel id="demo-simple-select-label">{t(lang, "Workers with")}</InputLabel>
                             <Select
                                 labelId="demo-simple-select-label"
                                 id="demo-simple-select"
-                                value={10}
+                                defaultValue={"More E"}
                                 label="Workers that are?"
                                 size="small"
-                                // onChange={handleChange}
+                                onChange={(e) => {setParameters({...parameters, orderBy: parameters.orderMap[e.target.value]}); setParameterChange(!parameterChange)}}
                             >
-                                <MenuItem value={10}>More Experienced</MenuItem>
-                                <MenuItem value={20}>Less Experienced</MenuItem>
-                                <MenuItem value={30}>Low Pay</MenuItem>
-                                <MenuItem value={30}>High Pay</MenuItem>
+                                <MenuItem value={"More E"}>{t(lang, "High Rank")}</MenuItem>
+                                <MenuItem value={"Less E"}>{t(lang, "Low Rank")}</MenuItem>
+                                <MenuItem value={"Low P"}>{t(lang, "Low Pay")}</MenuItem>
+                                <MenuItem value={"High P"}>{t(lang, "High Pay")}</MenuItem>
                             </Select>
                         </FormControl>
 
-                        <h1 className="orb my-5">Popular Services</h1>
+                        <h1 className="orb my-5">{t(lang, "Popular Services")}</h1>
 
-                        <PopularServices callback={()=>{}} />
+                        <PopularServices callback={(sub) => {setParameters({...parameters, service: safeGet(sub, "Title", "")}); setParameterChange(!parameterChange)}} />
                     </div>
-                    <div className="right min-h-screen flex grid-box-fill gap-3" style={{"--width": "240px"}}>
-                        {!data && Array.from({length: 20}, (item, index) => 
-                            <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate("/worker")} loading={true} name={<div className="orb font-semibold mb-1">David Shalom</div>}/>
-                        )}
+                    <div className="right " style={{"--width": "240px"}}>
 
-                        {data && data[0]?.map((item, index) => 
-                        {
-                            console.log(item, "over here");
-                            return <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate(`/worker/${encrypt(item.id)}`)} item={item} name={<div className="orb font-semibold mb-1">{safeGet(item.user, ["First Name"], "")} {safeGet(item.user, ["Last Name"], "")}</div>}/>
-                        }
-                        )}
+                        <div className="h-max grid-box-fill gap-3">
+                            {!data && Array.from({length: 20}, (item, index) => 
+                                <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate("/worker")} loading={true} name={<div className="orb font-semibold mb-1">David Shalom</div>}/>
+                            )}
+
+                            {data && userRank(safeGet(data, ["0"], []), safeGet(fallbackLocation, ["lat"], 0), safeGet(fallbackLocation, ["lng"], 0)).map((item, index) => 
+                                <Cards.Profile key={index} btnText="Book Now" onBtnClick={() => navigate(`/worker/${encrypt(item.id)}`)} item={item} name={<div className="orb font-semibold mb-1">{safeGet(item.user, ["First Name"], "")} {safeGet(item.user, ["Last Name"], "")}</div>}/>
+                            )}
+                        </div>
+
+                        <EmptyBox load={typeof(data) != 'undefined' && safeGet(data, ["0"], []).length <= 0} title="No Workers Found" text=""/>
+
                     </div>
                 </div>
             </div>

@@ -1,13 +1,16 @@
-
+import { useNavigate } from "react-router-dom";
 import { orderBy, where } from "firebase/firestore";
 import { Btn } from "./";
 import CardScroll from "./CardScroll";
 
 import { useData, getData } from "functions/reads/General";
-import { safeGet } from "functions/utils/Fixers";
+import { safeGet, encrypt } from "functions/utils/Fixers";
 import { Skeleton } from "@mui/material";
 
 export default function () {
+
+    const navigate = useNavigate();
+
     const { data } = useData({
         target: "Booking Profile",
         conditions: [ orderBy("Work Experience & Certification", "desc") ],
@@ -33,7 +36,6 @@ export default function () {
         }
     });
 
-    console.log(data);
 
     return (
         <CardScroll title='Our Best Workers'>
@@ -48,7 +50,7 @@ export default function () {
                                     <i className="bi bi-geo-alt border rounded-full h-[20px] w-[20px] flex items-center justify-center"></i>
                                     <span className="" style={{width: 'calc(100% - 35px)'}}>{safeGet(item.user, ["location", "Address"], "")}</span>
                                 </div>
-                                <div className="title orb text-lg my-3">{safeGet(item.user, ["First Name"], "")} {safeGet(item.user, ["Last Name"], "")}</div>
+                                <div className="title orb text-lg my-1.5">{safeGet(item.user, ["First Name"], "")} {safeGet(item.user, ["Last Name"], "")}</div>
 
                             <div className="flex gap-2 items-center">
                                 {Array.from({length: safeGet(item, ["Work Experience & Certification", "Rating"] )}, (item, index) => <i key={index} className="bi bi-star-fill text-yellow-400" />)}
@@ -56,10 +58,10 @@ export default function () {
                             </div>
                             <div className="font-semibold orb mt-2">{safeGet(item, ["Service Information", "Service Category"])}</div>
                             <div className="font-semibold orb text-xs mb-2">{safeGet(item, ["Service Information", "Service Provided"])}</div>
-                            <div className="text-sm p-05 text-gray-200"> <span className="font-semibold text-xs">Experience: </span>{safeGet(item, ["Service Information", "Expertise"])}</div>
-                            <div className="text-sm p-05 text-gray-200"> <span className="font-semibold text-xs">Charge Rate: </span> Ghc {safeGet(item, ["Service Information", "Charge"])} / {safeGet(item, ["Service Information", "Charge Rate"])}</div>
+                            <div className="text-sm p-05 text-gray-600"> <span className="font-semibold text-xs">Experience: </span>{safeGet(item, ["Service Information", "Expertise"])}</div>
+                            <div className="text-sm p-05 text-gray-600 mb-2"> <span className="font-semibold text-xs">Charge Rate: </span> Ghc {safeGet(item, ["Service Information", "Charge"])} / {safeGet(item, ["Service Information", "Charge Rate"])}</div>
 
-                            <Btn.SmallBtn >Book Now</Btn.SmallBtn>
+                            <Btn.SmallBtn onClick={() => navigate(`/worker/${encrypt(item.id)}`)} >Book Now</Btn.SmallBtn>
                         </div>
                     </div>
                     <div className="absolute -top-3 -right-3 h-[40px] w-[40px] border border-gray-200 rounded-full bg-white shadow">

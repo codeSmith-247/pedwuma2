@@ -5,6 +5,7 @@ import { uploadFile } from "functions/utils/Files";
 import { ipInfo } from "functions/utils/Locations";
 import { getDocById } from "functions/reads/General";
 import { geohashForLocation } from "geofire-common";
+import { getAuth } from "firebase/auth";
 
 export const newJob = async (jobInputs) => {
 
@@ -51,7 +52,7 @@ export const newJob = async (jobInputs) => {
             },
             "Seen By": jobInputs.seenBy,
             "Service Information": {
-                "Charge": jobInputs.amount,
+                "Charge": parseFloat(jobInputs.amount),
                 "Charge Rate": jobInputs.chargeRate,
                 "Expertise": jobInputs.expertise,
                 "Service Category": jobInputs.category,
@@ -95,6 +96,7 @@ export const newApplication = async (inputs) => {
             "Note": inputs.note,
             "Receiver Id": inputs.receiver,
             "Reference Links": inputs.link,
+            "Portfolio": [],
             "Schedule Date": Timestamp.fromDate(date),
             "Upload Timestamp": serverTimestamp(),
         });
@@ -129,4 +131,31 @@ export const newApplication = async (inputs) => {
         return false;
     }
 
+}
+
+export const newReview = async (review) => {
+    try {
+
+        getAuth().currentUser;
+
+        const result = await addDoc( refs.reviews , {
+            "Booking Profile ID": review.profileId,
+            "Comment": review.review,
+            "Review Date": serverTimestamp(),
+            "User ID": getAuth().currentUser.uid,
+            "Likes": 0,
+            "Replies": [],
+            "Stars": review.stars,
+        });
+
+        updateDoc( doc( db, "Reviews", result.id), {
+            "Review ID": result.id,
+        });
+
+        return true;
+    }
+    catch(error) {
+        console.log(error);
+        return false;
+    }
 }

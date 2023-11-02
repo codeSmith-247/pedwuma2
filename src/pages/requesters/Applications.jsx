@@ -15,6 +15,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { Skeleton } from "@mui/material";
 
 
 
@@ -103,7 +104,7 @@ export default function() {
 
                                 <TableCell>{readableDate(safeGet(row, ["Schedule Date"], Object))}</TableCell>
 
-                                <TableCell><span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{status}</span></TableCell>
+                                <TableCell><span className={`${status == "Pending" ? "bg-orange-500" : status == "Rejected" ? "bg-red-500" : status == "Completed" ? "bg-cyan-800" : "bg-blue-500"} px-3 py-1.5 rounded-lg text-white`}>{status}</span></TableCell>
 
                                 <TableCell>
                                     <Btn.SmallBtn onClick={() => navigate(`/admin/application/${encrypt(row.id)}`)}>View Details</Btn.SmallBtn>
@@ -117,7 +118,11 @@ export default function() {
                 </Table>
             </TableContainer>
 
-            <EmptyBox load={typeof(data) != 'undefined' && data[0]?.length <= 0} title="No Jobs Yet" text="please visit the jobs page and apply for new jobs today"/>
+            {!data && Array.from({length: 10}, (item, index) => 
+                <Skeleton key={index} height={100} />
+            )}
+
+            <EmptyBox load={typeof(data) != 'undefined' && data[0]?.length <= 0} title="No Applications Yet" text="please visit the jobs page and apply for new jobs today"/>
 
         </section>
     );
